@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brain MRI Classifier</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>Brain MRI Classifier</h1>
+      <p class="tagline">Upload a brain MRI slice to see what a small CNN predicts, and which parts of the image drove that prediction.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="notice" role="note">
+      <strong>Research demo, not a medical device.</strong>
+      Do not use it to make health decisions. Images are processed in memory and not stored.
+    </div>
+
+    <section class="card upload-card">
+      <label id="dropzone" class="dropzone" for="file-input">
+        <input id="file-input" type="file" accept="image/jpeg,image/png" hidden>
+        <span class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        </span>
+        <span class="dropzone-title">Drop an MRI image here, or click to choose one</span>
+        <span class="dropzone-hint">JPEG or PNG, up to 10 MB</span>
+      </label>
+      <p id="error" class="error" role="alert" hidden></p>
+    </section>
+
+    <section id="loading" class="card loading" hidden>
+      <span class="spinner" aria-hidden="true"></span> Analysing image…
+    </section>
+
+    <section id="results" class="results" hidden>
+      <div class="card viewer-card">
+        <div class="viewer-head">
+          <h2>Scan and Grad-CAM heatmap</h2>
+          <label class="toggle">
+            <input id="heatmap-toggle" type="checkbox" checked> Show heatmap
+          </label>
+        </div>
+
+        <div class="viewer">
+          <img id="scan" alt="Uploaded scan">
+          <img id="heatmap" class="heatmap" alt="Grad-CAM heatmap overlay">
+        </div>
+
+        <div class="slider-row">
+          <label for="opacity">Heatmap opacity</label>
+          <input id="opacity" type="range" min="0" max="100" value="60">
+          <output id="opacity-value">60%</output>
+        </div>
+
+        <div class="legend" aria-hidden="true">
+          <span>Little influence</span>
+          <span class="legend-bar"></span>
+          <span>Strong influence</span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="card prediction-card">
+          <p class="label">Prediction</p>
+          <p id="prediction" class="prediction"></p>
+          <div class="meter"><div id="confidence-bar" class="meter-fill"></div></div>
+          <p id="confidence" class="confidence"></p>
+          <dl id="probabilities" class="probabilities"></dl>
+          <p id="uncertain" class="uncertain" hidden>
+            The model is unsure about this image. Treat this result as a coin flip, not an answer.
+          </p>
+          <ul id="warnings" class="warnings"></ul>
+        </div>
+
+        <div class="card model-view-card">
+          <img id="model-view" class="model-view" alt="The image at the model's 64 by 64 resolution">
+          <div>
+            <h3>What the model sees</h3>
+            <p>Every image is shrunk to 64×64 pixels before the model looks at it. Small details may be lost at this size.</p>
+          </div>
+        </div>
+
+        <button id="reset" class="button" type="button">Analyse another image</button>
+      </div>
+    </section>
+
+    <section class="info-grid">
+      <article class="card">
+        <h2>Reading the heatmap</h2>
+        <p>Grad-CAM highlights the regions that pushed the model toward its prediction. Red areas mattered most and blue areas least.</p>
+        <p>A heatmap shows where the model looked, not whether it was right. If it lights up the skull, background or image edges instead of brain tissue, the model may be relying on the wrong cues.</p>
+        <p>The heatmap is coarse (12×12 cells stretched over the image), so treat it as a rough guide, not an outline of a tumour.</p>
+      </article>
+
+      <article class="card">
+        <h2>Limitations</h2>
+        <ul class="limits">
+          <li>Trained on about 3,000 public MRI slices, with no patient information or clinical validation.</li>
+          <li>It misses more tumours than it falsely flags. A "No tumor" result is the less reliable of the two.</li>
+          <li>Reported accuracy (about 93%) is likely optimistic: the dataset contains near-duplicate scans.</li>
+          <li>It only says tumour or no tumour. It cannot locate, measure or name a tumour type.</li>
+          <li>It will give an answer for any image, including ones that are not brain MRIs.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>About the model</h2>
+        <dl class="specs">
+          <dt>Type</dt><dd>Convolutional neural network, trained from scratch</dd>
+          <dt>Layers</dt><dd>3 convolution blocks, 2 dense layers</dd>
+          <dt>Parameters</dt><dd id="param-count">93,314</dd>
+          <dt>Input</dt><dd>64×64 RGB</dd>
+          <dt>Framework</dt><dd>PyTorch</dd>
+        </dl>
+      </article>
+    </section>
+  </main>
+
+  <footer class="wrap site-footer">
+    For education and research only. Not for diagnosis or treatment.
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

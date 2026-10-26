@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Training images (download separately)
+datasets/
+
+# Old / experimental model files
+*.keras
+BrainTumorCNN.pt

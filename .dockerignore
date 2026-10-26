@@ -1,0 +1,8 @@
+.venv/
+datasets/
+__pycache__/
+*.keras
+BrainTumorCNN.pt
+mainTrain.py
+mainTest.py
+Liver.py
