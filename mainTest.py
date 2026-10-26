@@ -6,7 +6,7 @@ import torch
 
 from model import BrainTumorCNN, CLASS_NAMES, preprocess
 
-MODEL_PATH = Path(__file__).resolve().parent / 'BrainTumor10Epochs.pt'
+MODEL_PATH = Path(__file__).resolve().parent / 'BrainTumorBest.pt'
 DEFAULT_IMAGES = Path(r'Z:\GoogleDownloads\Brain\pred')
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png')
 

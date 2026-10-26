@@ -13,9 +13,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from gradcam import grad_cam, heatmap_image  # noqa: E402
-from model import BrainTumorCNN, CLASS_NAMES, INPUT_SIZE, preprocess  # noqa: E402
+from model import BrainTumorCNN, CLASS_NAMES, INPUT_SIZE, crop_to_brain, preprocess  # noqa: E402
 
-MODEL_PATH = ROOT / 'BrainTumor10Epochs.pt'
+MODEL_PATH = ROOT / 'BrainTumorBest.pt'
 STATIC_DIR = Path(__file__).resolve().parent / 'static'
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_DISPLAY_SIZE = 512
@@ -82,14 +82,16 @@ async def predict(file: UploadFile = File(...)):
         probabilities = torch.softmax(model(tensor), dim=1)[0]
     predicted = int(probabilities.argmax())
 
-    # Heatmap at display size, matching the uploaded image's aspect ratio
-    height, width = image.shape[:2]
+    # The model only sees the cropped brain, so show that crop and stretch the
+    # heatmap over it, keeping the crop's aspect ratio
+    cropped = crop_to_brain(image)
+    height, width = cropped.shape[:2]
     scale = min(1.0, MAX_DISPLAY_SIZE / max(height, width))
     display_w, display_h = round(width * scale), round(height * scale)
-    display = cv2.resize(image, (display_w, display_h), interpolation=cv2.INTER_AREA)
+    display = cv2.resize(cropped, (display_w, display_h), interpolation=cv2.INTER_AREA)
 
     cam = grad_cam(model, tensor, predicted, GRAD_CAM_LAYER)
-    model_view = cv2.resize(image, (INPUT_SIZE, INPUT_SIZE))
+    model_view = cv2.resize(cropped, (INPUT_SIZE, INPUT_SIZE))
 
     return {
         'prediction': CLASS_NAMES[predicted],

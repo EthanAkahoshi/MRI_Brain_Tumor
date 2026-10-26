@@ -8,7 +8,7 @@ WORKDIR /app
 COPY webapp/requirements.txt webapp/requirements.txt
 RUN pip install --no-cache-dir -r webapp/requirements.txt
 
-COPY model.py gradcam.py BrainTumor10Epochs.pt ./
+COPY model.py gradcam.py BrainTumorBest.pt ./
 COPY webapp/ webapp/
 
 RUN useradd --create-home appuser

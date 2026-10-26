@@ -8,3 +8,6 @@ datasets/
 # Old / experimental model files
 *.keras
 BrainTumorCNN.pt
+
+# Session notes (local only)
+HANDOFF.md

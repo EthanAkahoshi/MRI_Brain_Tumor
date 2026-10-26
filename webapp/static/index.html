@@ -77,10 +77,10 @@
         </div>
 
         <div class="card model-view-card">
-          <img id="model-view" class="model-view" alt="The image at the model's 64 by 64 resolution">
+          <img id="model-view" class="model-view" alt="The image at the model's 128 by 128 resolution">
           <div>
             <h3>What the model sees</h3>
-            <p>Every image is shrunk to 64×64 pixels before the model looks at it. Small details may be lost at this size.</p>
+            <p>Every image is cropped to the head and shrunk to 128×128 pixels before the model looks at it. Small details may be lost at this size.</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@
         <h2>Reading the heatmap</h2>
         <p>Grad-CAM highlights the regions that pushed the model toward its prediction. Red areas mattered most and blue areas least.</p>
         <p>A heatmap shows where the model looked, not whether it was right. If it lights up the skull, background or image edges instead of brain tissue, the model may be relying on the wrong cues.</p>
-        <p>The heatmap is coarse (12×12 cells stretched over the image), so treat it as a rough guide, not an outline of a tumour.</p>
+        <p>The heatmap is coarse (28×28 cells stretched over the image), so treat it as a rough guide, not an outline of a tumour.</p>
       </article>
 
       <article class="card">
@@ -112,8 +112,8 @@
         <dl class="specs">
           <dt>Type</dt><dd>Convolutional neural network, trained from scratch</dd>
           <dt>Layers</dt><dd>3 convolution blocks, 2 dense layers</dd>
-          <dt>Parameters</dt><dd id="param-count">93,314</dd>
-          <dt>Input</dt><dd>64×64 RGB</dd>
+          <dt>Parameters</dt><dd id="param-count">420,994</dd>
+          <dt>Input</dt><dd>128×128 RGB, cropped to the head</dd>
           <dt>Framework</dt><dd>PyTorch</dd>
         </dl>
       </article>
