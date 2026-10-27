@@ -1,10 +1,12 @@
 const MAX_BYTES = 10 * 1024 * 1024;
 const VIEWER_HEIGHT = 480;
+const REVEAL_MS = 1600;
+const REVEAL_DELAY = 250; // let the results fade in before the heatmap starts building
 // The API keys are "Tumor" / "No tumor"; the page displays British spelling
 const DISPLAY = { Tumor: 'Tumour', 'No tumor': 'No tumour' };
 const MEANING = {
-  Tumor: 'The model sees a tumour pattern. This is not a diagnosis; a radiologist has to review it.',
-  'No tumor': 'The model found no tumour pattern. It does miss some tumours, so this does not rule one out.',
+  Tumor: 'The model found a pattern it associates with tumours. This is not a diagnosis; a radiologist would need to review the scan.',
+  'No tumor': 'The model found no tumour pattern. It misses some tumours, so this does not rule one out.',
 };
 
 const $ = (id) => document.getElementById(id);
@@ -66,8 +68,8 @@ function reliabilityWarnings(rel) {
   if (f && f.label_changed) list.push('The follow-up test changed the predicted label.');
   if (f && Math.abs(f.score_change) > limits.max_score_change) list.push('The tumour score moved a lot under a small, controlled change.');
   if (f && f.predicted_tumor && f.heatmap_agreement != null && f.heatmap_agreement < limits.min_heatmap_agreement) list.push('The heatmap moved to a different region in the follow-up test.');
-  if (rel.status === 'poor_quality') list.push('Image quality is too low for the result to mean much.');
-  if (rel.human_review) list.push('Flagged for human review in this demo.');
+  if (rel.status === 'poor_quality') list.push('The image quality is too low to trust this result.');
+  if (rel.human_review) list.push('This demo would send the scan to a person to check.');
   return list;
 }
 
@@ -122,6 +124,60 @@ function setCompare() {
   divider.style.transform = `translateX(-${hidden}%)`;
 }
 
+const loadImage = (src) => new Promise((resolve, reject) => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = reject;
+  img.src = src;
+});
+
+function pixels(img) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+let heat = null;
+let revealFrame = 0;
+
+async function prepareHeatmap(data) {
+  const [colour, cam] = await Promise.all([loadImage(data.heatmap), loadImage(data.cam)]);
+  heat = { full: pixels(colour), cam: pixels(cam).data };
+  heatmap.width = heat.full.width;
+  heatmap.height = heat.full.height;
+  revealHeatmap();
+}
+
+// Strongest-first reveal: a threshold sweeps from 100% influence down to 0, so the region that
+// drove the prediction lights up first and weaker influence spreads out from it
+function revealHeatmap() {
+  cancelAnimationFrame(revealFrame);
+  const ctx = heatmap.getContext('2d');
+  const { full, cam } = heat;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    ctx.putImageData(full, 0, 0);
+    return;
+  }
+  const frameData = new ImageData(new Uint8ClampedArray(full.data), full.width, full.height);
+  const out = frameData.data;
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start - REVEAL_DELAY) / REVEAL_MS);
+    const level = 255 * (1 - t) ** 2; // lingers on the hot core, then speeds up
+    for (let i = 3; i < out.length; i += 4) {
+      const edge = (cam[i - 3] - level) / 24; // soft front, not a hard contour
+      out[i] = edge >= 1 ? full.data[i] : edge <= 0 ? 0 : full.data[i] * edge;
+    }
+    ctx.putImageData(frameData, 0, 0);
+    if (t < 1) revealFrame = requestAnimationFrame(step);
+    else ctx.putImageData(full, 0, 0);
+  };
+  revealFrame = requestAnimationFrame(step);
+}
+
 function probabilityRow(name, p, win) {
   const row = document.createElement('div');
   row.className = 'prob-row';
@@ -152,7 +208,9 @@ function showResult(data) {
   box = b && b.w > 0 && b.h > 0 ? b : { x: 0, y: 0, w: 1, h: 1 };
   sizeViewer();
   $('scan').src = data.image;
-  heatmap.src = data.heatmap;
+  cancelAnimationFrame(revealFrame);
+  heatmap.getContext('2d').clearRect(0, 0, heatmap.width, heatmap.height);
+  prepareHeatmap(data).catch(() => showError('Could not draw the heatmap.'));
   $('model-view').src = data.model_view;
   $('original').src = data.original;
   $('cropped').src = data.image;
@@ -226,17 +284,26 @@ fileInput.addEventListener('change', () => {
   fileInput.value = '';
 });
 
-['dragenter', 'dragover'].forEach((type) => dropzone.addEventListener(type, (event) => {
+// Files are accepted anywhere on the page, so a near miss doesn't open the image in the tab.
+// dragenter/dragleave fire for every child element, so count them to know when the drag leaves
+let dragDepth = 0;
+const carriesFiles = (event) => [...(event.dataTransfer?.types || [])].includes('Files');
+const endDrag = () => { dragDepth = 0; dropzone.classList.remove('dragging'); };
+
+window.addEventListener('dragenter', (event) => {
+  if (!carriesFiles(event)) return;
   event.preventDefault();
+  dragDepth += 1;
   dropzone.classList.add('dragging');
-}));
-
-['dragleave', 'drop'].forEach((type) => dropzone.addEventListener(type, (event) => {
+});
+window.addEventListener('dragover', (event) => { if (carriesFiles(event)) event.preventDefault(); });
+window.addEventListener('dragleave', (event) => {
+  if (carriesFiles(event) && --dragDepth <= 0) endDrag();
+});
+window.addEventListener('drop', (event) => {
+  if (!carriesFiles(event)) return;
   event.preventDefault();
-  dropzone.classList.remove('dragging');
-}));
-
-dropzone.addEventListener('drop', (event) => {
+  endDrag();
   const file = event.dataTransfer.files[0];
   if (file) analyse(file);
 });
@@ -252,6 +319,7 @@ document.querySelectorAll('.sample').forEach((button) => button.addEventListener
   }
 }));
 
+$('replay').addEventListener('click', () => { if (heat) revealHeatmap(); });
 compare.addEventListener('input', setCompare);
 opacity.addEventListener('input', setOpacity);
 $('heatmap-toggle').addEventListener('change', setOpacity);
@@ -265,21 +333,13 @@ $('reset').addEventListener('click', () => {
 // Decision trace: open on desktop, folded on phones to keep the verdict column short
 $('trace-details').open = matchMedia('(min-width: 861px)').matches;
 
-// Scroll-edge effect: the header only shows its fade once content is underneath it
-const header = $('site-header');
-const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 4);
-window.addEventListener('scroll', onScroll, { passive: true });
-onScroll();
-
 fetch('/api/model')
   .then((response) => response.json())
   .then((info) => {
     limits = { ...limits, ...info.reliability_thresholds };
     const size = `${info.input_size}×${info.input_size}`;
     $('param-count').textContent = info.parameters.toLocaleString();
+    $('stat-params').textContent = info.parameters.toLocaleString();
     document.querySelectorAll('.input-size').forEach((el) => { el.textContent = size; });
-    $('model-chips').replaceChildren(...[
-      `${info.parameters.toLocaleString()} parameters`, `${size} input`, 'Trained from scratch', 'PyTorch',
-    ].map((text) => el('li', '', text)));
   })
   .catch(() => {});

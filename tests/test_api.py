@@ -46,7 +46,7 @@ def test_predict_returns_quality_and_reliability(client):
     assert len(body['quality']['checks']) == 9
     assert body['reliability']['status'] in ('consistent', 'sensitive', 'poor_quality', 'review')
     assert body['reliability']['trace'][0]['step'] == 'Initial analysis'
-    for key in ('original', 'image', 'heatmap', 'model_view'):
+    for key in ('original', 'image', 'heatmap', 'cam', 'model_view'):
         assert body[key].startswith('data:image/png;base64,')
 
 

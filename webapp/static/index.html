@@ -6,41 +6,76 @@
   <meta name="color-scheme" content="light dark">
   <title>MRI VisionGuard</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header id="site-header" class="site-header">
-    <div class="wrap header-inner">
-      <p class="brand">
-        <svg class="brand-mark" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="12" rx="7.5" ry="9"/><path d="M12 3v18M7.5 9.5c1.5.8 1.5 2.2 0 3M16.5 9.5c-1.5.8-1.5 2.2 0 3M7.5 15.5c1.2.5 2.2.5 3 0M16.5 15.5c-1.2.5-2.2.5-3 0"/></svg>
-        MRI VisionGuard <span class="brand-tag">Research demo</span>
-      </p>
-      <ul id="model-chips" class="chips" aria-label="Model details"></ul>
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="nav-bar" aria-label="Main">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="12" rx="7.5" ry="9"/><path d="M12 3v18M7.5 9.5c1.5.8 1.5 2.2 0 3M16.5 9.5c-1.5.8-1.5 2.2 0 3M7.5 15.5c1.2.5 2.2.5 3 0M16.5 15.5c-1.2.5-2.2.5-3 0"/></svg>
+          </span>
+          MRI VisionGuard
+        </a>
+        <ul class="nav-links">
+          <li><a href="#upload">Analyse</a></li>
+          <li><a href="#guide">Reading the heatmap</a></li>
+          <li><a href="#limits">Limitations</a></li>
+        </ul>
+        <span class="brand-tag">Research use only</span>
+      </nav>
     </div>
   </header>
 
-  <main class="wrap">
+  <main id="top" class="wrap">
     <section class="hero">
-      <h1>Explainable MRI analysis and reliability monitoring</h1>
-      <p class="tagline">Upload a brain MRI slice. A small neural network scores it, a heatmap shows where it looked, and OpenCV checks report how far the result can be trusted.</p>
+      <h1>Brain MRI <span class="accent-text">tumour classification</span></h1>
+      <p class="tagline">Upload one axial slice to get a tumour score, a Grad-CAM map of where the model looked, and checks on image quality and reliability.</p>
       <p class="notice" role="note">
         <strong>Educational research demonstration.</strong> Not approved for medical diagnosis. Images are processed in memory and never stored.
       </p>
     </section>
 
-    <section class="card upload-card" aria-label="Choose a scan">
+    <ul class="stats" aria-label="Model at a glance">
+      <li class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>
+        <span id="stat-params" class="stat-value">393,618</span>
+        <span class="stat-label">parameters, trained from scratch</span>
+      </li>
+      <li class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+        <span class="stat-value">93.8%</span>
+        <span class="stat-label">balanced accuracy on held-out test scans</span>
+      </li>
+      <li class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>
+        <span class="stat-value">84.7%</span>
+        <span class="stat-label">on an external dataset it never saw</span>
+      </li>
+      <li class="stat">
+        <svg class="stat-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+        <span class="stat-value">95.6%</span>
+        <span class="stat-label">of 1,743 healthy IXI slices cleared</span>
+      </li>
+    </ul>
+
+    <section id="upload" class="card upload-card" aria-label="Choose a scan">
       <div class="samples">
         <div class="sample-group">
-          <p class="samples-label">Try a sample</p>
+          <p class="samples-label">Sample scans <span class="samples-note">Labelled with the known diagnosis. Click one to analyse it.</span></p>
           <div class="sample-row">
-            <button class="sample" type="button" data-src="/static/samples/tumor-1.jpg"><img src="/static/samples/tumor-1.jpg" alt=""><span>Tumour</span></button>
-            <button class="sample" type="button" data-src="/static/samples/tumor-2.jpg"><img src="/static/samples/tumor-2.jpg" alt=""><span>Tumour</span></button>
-            <button class="sample" type="button" data-src="/static/samples/healthy-1.jpg"><img src="/static/samples/healthy-1.jpg" alt=""><span>Healthy</span></button>
-            <button class="sample" type="button" data-src="/static/samples/healthy-2.jpg"><img src="/static/samples/healthy-2.jpg" alt=""><span>Healthy</span></button>
+            <button class="sample" type="button" data-kind="tumour" data-src="/static/samples/tumor-1.jpg"><img src="/static/samples/tumor-1.jpg" alt=""><span class="sample-tag">Tumour</span></button>
+            <button class="sample" type="button" data-kind="tumour" data-src="/static/samples/tumor-2.jpg"><img src="/static/samples/tumor-2.jpg" alt=""><span class="sample-tag">Tumour</span></button>
+            <button class="sample" type="button" data-kind="healthy" data-src="/static/samples/healthy-1.jpg"><img src="/static/samples/healthy-1.jpg" alt=""><span class="sample-tag">Healthy</span></button>
+            <button class="sample" type="button" data-kind="healthy" data-src="/static/samples/healthy-2.jpg"><img src="/static/samples/healthy-2.jpg" alt=""><span class="sample-tag">Healthy</span></button>
           </div>
         </div>
         <div class="sample-group difficult">
-          <p class="samples-label">Try a difficult scan <span class="samples-note">to see the reliability check</span></p>
+          <p class="samples-label">Difficult inputs <span class="samples-note">A tumour scan made harder on purpose, to show how the reliability checks react. Low contrast triggers a follow-up test; the very dark one is flagged as poor quality.</span></p>
           <div class="sample-row">
             <button class="sample" type="button" data-src="/static/samples/difficult-low-contrast.jpg"><img src="/static/samples/difficult-low-contrast.jpg" alt=""><span>Low contrast</span></button>
             <button class="sample" type="button" data-src="/static/samples/difficult-very-dark.jpg"><img src="/static/samples/difficult-very-dark.jpg" alt=""><span>Very dark</span></button>
@@ -51,16 +86,17 @@
       <label id="dropzone" class="dropzone" for="file-input">
         <input id="file-input" type="file" accept="image/jpeg,image/png" hidden>
         <span class="dropzone-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
         </span>
-        <span class="dropzone-title">Or drop your own MRI image here, or click to choose</span>
-        <span class="dropzone-hint">JPEG or PNG, up to 10 MB</span>
+        <span class="dropzone-title">Drop a brain MRI scan here</span>
+        <span class="dropzone-hint">or <span class="dropzone-browse">click to browse</span> · JPEG or PNG, up to 10 MB</span>
+        <span class="dropzone-release">Release to scan for a tumour</span>
       </label>
       <p id="error" class="error" role="alert" hidden></p>
     </section>
 
     <section id="loading" class="card loading" hidden>
-      <span class="spinner" aria-hidden="true"></span> Analysing scan and running reliability checks…
+      <span class="spinner" aria-hidden="true"></span> Analysing…
     </section>
 
     <section id="results" class="results" hidden aria-live="polite" aria-label="Results">
@@ -98,7 +134,7 @@
             <summary><h3>Decision trace</h3></summary>
             <ol id="trace" class="trace"></ol>
           </details>
-          <p class="fine">This status is a research-demo state, not a clinical decision.</p>
+          <p class="fine">These statuses belong to the research demo and carry no clinical meaning.</p>
         </article>
       </div>
 
@@ -106,14 +142,17 @@
         <article class="card viewer-card">
           <div class="viewer-head">
             <h2>Grad-CAM heatmap</h2>
-            <label class="toggle"><input id="heatmap-toggle" type="checkbox" checked> Show heatmap</label>
+            <div class="viewer-tools">
+              <button id="replay" class="link-button" type="button">Replay</button>
+              <label class="toggle"><input id="heatmap-toggle" type="checkbox" checked> Show heatmap</label>
+            </div>
           </div>
 
           <!-- The viewer shows only content_box; the frame holds both images at one size and offset -->
           <div class="viewer" id="viewer">
             <div id="viewer-frame" class="viewer-frame">
               <img id="scan" alt="Uploaded scan, cropped to the head">
-              <img id="heatmap" class="heatmap" alt="Grad-CAM heatmap overlay">
+              <canvas id="heatmap" class="heatmap" role="img" aria-label="Grad-CAM heatmap overlay"></canvas>
             </div>
             <div id="divider" class="divider" aria-hidden="true"><span class="divider-handle"></span></div>
             <input id="compare" class="compare" type="range" min="0" max="100" value="100" aria-label="Drag to compare the scan with the heatmap">
@@ -159,18 +198,18 @@
     </section>
 
     <section class="info-grid">
-      <article class="card">
+      <article id="guide" class="card">
         <h2>Reading the heatmap</h2>
-        <p>Grad-CAM highlights the regions that pushed the model toward its answer. Red mattered most, blue least.</p>
-        <p>It shows where the model looked, not whether it was right. Heat on the skull, background or image edges means it may be using the wrong cues.</p>
-        <p>The heatmap is coarse. It is not a tumour segmentation or an outline of a lesion.</p>
+        <p>Grad-CAM marks the regions that pushed the model toward its answer. Red mattered most, blue least.</p>
+        <p>A strong highlight doesn't mean the answer is right. If the heat sits on the skull, the background or the image edges, the model may be using the wrong cues.</p>
+        <p>The map is coarse, built from a 16×16 grid and scaled up, so it doesn't outline the tumour.</p>
       </article>
 
-      <article class="card">
+      <article id="limits" class="card">
         <h2>Limitations</h2>
         <ul class="limits">
           <li>Trained on a few thousand public MRI slices, without patient information or clinical validation.</li>
-          <li>It does worse on scans from sources it wasn't trained on, and it can miss tumours. A "No tumour" result never rules one out.</li>
+          <li>It does worse on scans from sources it wasn't trained on, and it misses some tumours. A "No tumour" result never rules one out.</li>
           <li>Scores are not calibrated probabilities. A 99% score does not mean a 99% chance.</li>
           <li>It gives an answer for any image, even ones that aren't brain MRIs.</li>
           <li>Each scan is shrunk to the model's input size, so small details can be lost.</li>
@@ -190,7 +229,7 @@
     </section>
   </main>
 
-  <footer class="wrap site-footer">Educational research demonstration. Not approved for medical diagnosis or treatment. Images are processed in memory and never stored.</footer>
+  <footer class="wrap site-footer">For research and teaching only. Do not use it to diagnose or treat anyone.</footer>
 
   <script src="/static/app.js"></script>
 </body>

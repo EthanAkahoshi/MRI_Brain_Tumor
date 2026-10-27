@@ -106,6 +106,9 @@ def predict(file: UploadFile = File(...)):
     content_box = {'x': (side - cw) // 2 / side, 'y': (side - ch) // 2 / side, 'w': cw / side, 'h': ch / side}
     model_view = (result['tensor'][0, 0].numpy() * 255).round().astype(np.uint8)
     quality = result['quality']
+    # Raw Grad-CAM strength at display size; the page reveals the heatmap strongest-first from it
+    cam = cv2.resize(result['cam'], (display.shape[1], display.shape[0]), interpolation=cv2.INTER_CUBIC)
+    cam = (np.clip(cam, 0, 1) * 255).astype(np.uint8)
 
     return {
         'prediction': prediction,
@@ -114,6 +117,7 @@ def predict(file: UploadFile = File(...)):
         'original': encode_png(fit(image)),
         'image': encode_png(display),
         'heatmap': encode_png(heatmap_image(result['cam'], display.shape[1], display.shape[0])),
+        'cam': encode_png(cam),
         'model_view': encode_png(model_view),
         'content_box': content_box,
         'quality': {'checks': quality['checks'], 'metrics': quality['metrics']},
