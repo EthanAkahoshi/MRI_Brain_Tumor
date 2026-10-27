@@ -1,7 +1,9 @@
 const MAX_BYTES = 10 * 1024 * 1024;
-const VIEWER_HEIGHT = 420;
+const VIEWER_HEIGHT = 480;
+// The API keys are "Tumor" / "No tumor"; the page displays British spelling
+const DISPLAY = { Tumor: 'Tumour', 'No tumor': 'No tumour' };
 const MEANING = {
-  Tumor: 'The model sees a tumour pattern in this scan. This is not a diagnosis; a radiologist has to review it.',
+  Tumor: 'The model sees a tumour pattern. This is not a diagnosis; a radiologist has to review it.',
   'No tumor': 'The model found no tumour pattern. It does miss some tumours, so this does not rule one out.',
 };
 
@@ -12,6 +14,7 @@ const errorBox = $('error');
 const loading = $('loading');
 const results = $('results');
 const viewer = $('viewer');
+const frame = $('viewer-frame');
 const heatmap = $('heatmap');
 const divider = $('divider');
 const compare = $('compare');
@@ -21,6 +24,8 @@ const percent = (value) => `${(value * 100).toFixed(1)}%`;
 const signed = (value) => `${value >= 0 ? '+' : '−'}${Math.abs(value * 100).toFixed(1)} pts`;
 // Overwritten by /api/model; defaults match the server so the page works if that call fails
 let limits = { max_background_heat: 0.55, max_score_change: 0.2, min_heatmap_agreement: 0.35 };
+// Fractions of the padded square image where the real scan lies
+let box = { x: 0, y: 0, w: 1, h: 1 };
 
 const STATUS_TONE = { consistent: 'ok', sensitive: 'warn', poor_quality: 'warn', review: 'review' };
 
@@ -31,17 +36,13 @@ function el(tag, className, text) {
   return node;
 }
 
-function setBadge(node, reliability) {
-  node.textContent = reliability.status_label;
-  node.dataset.tone = STATUS_TONE[reliability.status] || 'warn';
-}
-
 function showQuality(quality) {
   const warned = quality.checks.filter((c) => c.status !== 'ok').length;
   $('quality-summary').textContent = warned
     ? `${warned} of ${quality.checks.length} checks need attention`
     : `All ${quality.checks.length} checks passed`;
   $('quality-summary').dataset.tone = warned ? 'warn' : 'ok';
+  $('quality-details').open = quality.checks.some((c) => c.status === 'warning');
   $('quality-rows').replaceChildren(...quality.checks.map((check) => {
     const row = el('tr');
     row.dataset.status = check.status;
@@ -56,14 +57,14 @@ function showQuality(quality) {
 }
 
 function reliabilityWarnings(rel) {
+  // Low confidence is already called out in the verdict card
   const list = [];
   const f = rel.followup;
-  if (rel.low_confidence) list.push('The score is close to the decision threshold (low confidence).');
   if (rel.background_heat > limits.max_background_heat) {
     list.push(`${Math.round(rel.background_heat * 100)}% of the heatmap weight is outside the head, so the model may be using the wrong cues.`);
   }
   if (f && f.label_changed) list.push('The follow-up test changed the predicted label.');
-  if (f && Math.abs(f.score_change) > limits.max_score_change) list.push('The tumour score moved a lot under a small, controlled change to the image.');
+  if (f && Math.abs(f.score_change) > limits.max_score_change) list.push('The tumour score moved a lot under a small, controlled change.');
   if (f && f.predicted_tumor && f.heatmap_agreement != null && f.heatmap_agreement < limits.min_heatmap_agreement) list.push('The heatmap moved to a different region in the follow-up test.');
   if (rel.status === 'poor_quality') list.push('Image quality is too low for the result to mean much.');
   if (rel.human_review) list.push('Flagged for human review in this demo.');
@@ -72,8 +73,9 @@ function reliabilityWarnings(rel) {
 
 function showReliability(data) {
   const rel = data.reliability;
-  setBadge($('status-badge'), rel);
-  setBadge($('reliability-badge'), rel);
+  const badge = $('status-badge');
+  badge.textContent = rel.status_label;
+  badge.dataset.tone = STATUS_TONE[rel.status] || 'warn';
 
   const f = rel.followup;
   $('followup').hidden = !f;
@@ -83,12 +85,12 @@ function showReliability(data) {
     $('score-followup').textContent = percent(f.tumor_probability);
     $('score-change').textContent = signed(f.score_change);
     $('score-change').dataset.tone = Math.abs(f.score_change) > limits.max_score_change ? 'warn' : 'ok';
-    $('followup-tool').textContent = `${f.tool}. Tumour score shown; label ${f.label_changed ? 'changed' : 'unchanged'}; ${f.heatmap_agreement != null ? `heatmap agreement ${f.heatmap_agreement.toFixed(2)}` : 'heatmaps not compared (this test changes the crop)'}.`;
+    $('followup-tool').textContent = `${f.tool}. Tumour score shown; label ${f.label_changed ? 'changed' : 'unchanged'}${f.heatmap_agreement != null ? `; heatmap agreement ${f.heatmap_agreement.toFixed(2)}` : ''}.`;
   }
 
   // Quality messages already sit in the quality table; point to them instead of repeating
   const n = data.warnings.length;
-  const warnings = [...(n ? [`${n} image quality warning${n > 1 ? 's' : ''}, listed under Image quality.`] : []), ...reliabilityWarnings(rel)];
+  const warnings = [...(n ? [`${n} image quality warning${n > 1 ? 's' : ''}, see Image quality.`] : []), ...reliabilityWarnings(rel)];
   $('reliability-warnings').replaceChildren(...warnings.map((text) => el('li', '', text)));
 
   $('trace').replaceChildren(...rel.trace.map((item) => {
@@ -112,9 +114,11 @@ function setOpacity() {
 }
 
 function setCompare() {
-  // Heatmap shows left of the divider; set on the elements directly, no inherited variables
+  // Heatmap shows left of the divider. The heatmap spans the whole padded frame, so map the
+  // divider (a fraction of the visible box) into frame coordinates for the clip
   const hidden = 100 - compare.value;
-  heatmap.style.clipPath = `inset(0 ${hidden}% 0 0)`;
+  const right = 100 - (box.x + box.w * (compare.value / 100)) * 100;
+  heatmap.style.clipPath = `inset(0 ${right}% 0 0)`;
   divider.style.transform = `translateX(-${hidden}%)`;
 }
 
@@ -123,20 +127,26 @@ function probabilityRow(name, p) {
   row.className = 'prob-row';
   const bar = el('div', 'bar');
   bar.append(el('div', 'bar-fill'));
-  row.append(el('dt', '', name), bar, el('dd', '', percent(p)));
+  row.append(el('dt', '', DISPLAY[name] || name), bar, el('dd', '', percent(p)));
   return row;
 }
 
 function sizeViewer() {
-  // Scale the scan to VIEWER_HEIGHT tall (or the card's width, if narrower), keeping its shape
-  const scan = $('scan');
-  const ratio = scan.naturalWidth / scan.naturalHeight || 1;
+  // The viewer has the scan's own shape (content_box of a square), at most VIEWER_HEIGHT tall;
+  // the frame is the full padded square, scaled and shifted so only the content shows
+  const ratio = box.w / box.h;
   viewer.style.aspectRatio = `${ratio}`;
   viewer.style.width = `min(100%, ${Math.round(VIEWER_HEIGHT * ratio)}px)`;
+  frame.style.width = `${100 / box.w}%`;
+  frame.style.height = `${100 / box.h}%`;
+  frame.style.left = `${(-box.x / box.w) * 100}%`;
+  frame.style.top = `${(-box.y / box.h) * 100}%`;
 }
 
 function showResult(data) {
-  $('scan').onload = sizeViewer;
+  const b = data.content_box;
+  box = b && b.w > 0 && b.h > 0 ? b : { x: 0, y: 0, w: 1, h: 1 };
+  sizeViewer();
   $('scan').src = data.image;
   heatmap.src = data.heatmap;
   $('model-view').src = data.model_view;
@@ -144,7 +154,7 @@ function showResult(data) {
   $('cropped').src = data.image;
 
   const prediction = $('prediction');
-  prediction.textContent = data.prediction;
+  prediction.textContent = DISPLAY[data.prediction] || data.prediction;
   prediction.className = `prediction ${data.prediction === 'Tumor' ? 'tumor' : 'clear'}`;
   $('meaning').textContent = MEANING[data.prediction] || '';
 

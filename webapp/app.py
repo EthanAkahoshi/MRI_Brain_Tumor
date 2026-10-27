@@ -97,7 +97,13 @@ def predict(file: UploadFile = File(...)):
     probabilities = {'No tumor': 1 - p, 'Tumor': p}
     prediction = CLASS_NAMES[result['label']]
 
-    display = fit(pad_to_square(crop_to_brain(image)))
+    cropped = crop_to_brain(image)
+    display = fit(pad_to_square(cropped))
+    # Where the real scan sits inside the padded square (fractions), so the page can
+    # trim the black bars from the scan AND the heatmap by exactly the same amount
+    ch, cw = cropped.shape[:2]
+    side = max(ch, cw)
+    content_box = {'x': (side - cw) // 2 / side, 'y': (side - ch) // 2 / side, 'w': cw / side, 'h': ch / side}
     model_view = (result['tensor'][0, 0].numpy() * 255).round().astype(np.uint8)
     quality = result['quality']
 
@@ -109,6 +115,7 @@ def predict(file: UploadFile = File(...)):
         'image': encode_png(display),
         'heatmap': encode_png(heatmap_image(result['cam'], display.shape[1], display.shape[0])),
         'model_view': encode_png(model_view),
+        'content_box': content_box,
         'quality': {'checks': quality['checks'], 'metrics': quality['metrics']},
         'reliability': result['reliability'],
         'warnings': quality['warnings'],
