@@ -66,7 +66,7 @@
     <section id="results" class="results" hidden aria-live="polite" aria-label="Results">
       <!-- Side column first in the DOM: on phones the verdict leads; on desktop it sits right and stays in view -->
       <div class="results-side">
-        <article class="card verdict-card">
+        <article id="verdict" class="card verdict-card">
           <div class="verdict-head">
             <div>
               <p class="label">Model prediction</p>
@@ -75,9 +75,9 @@
             <p id="status-badge" class="badge"></p>
           </div>
           <p id="meaning" class="meaning"></p>
+          <p id="uncertain" class="callout" hidden></p>
           <dl id="probabilities" class="probabilities"></dl>
           <p class="fine">Scores are the model's raw outputs, not calibrated probabilities.</p>
-          <p id="uncertain" class="callout" hidden>The score is close to the decision threshold, so the model is unsure about this scan.</p>
           <button id="reset" class="button" type="button">Analyse another scan</button>
         </article>
 
@@ -94,8 +94,10 @@
             <p id="followup-tool" class="muted-text"></p>
           </div>
           <ul id="reliability-warnings" class="warnings"></ul>
-          <h3>Decision trace</h3>
-          <ol id="trace" class="trace"></ol>
+          <details id="trace-details" class="fold trace-details" open>
+            <summary><h3>Decision trace</h3></summary>
+            <ol id="trace" class="trace"></ol>
+          </details>
           <p class="fine">This status is a research-demo state, not a clinical decision.</p>
         </article>
       </div>
@@ -124,9 +126,9 @@
             <output id="opacity-value">60%</output>
           </div>
 
-          <div class="legend" aria-hidden="true">
+          <div class="legend">
             <span>Little influence</span>
-            <span class="legend-bar"></span>
+            <span class="legend-bar" role="img" aria-label="Colour scale from little to strong influence"></span>
             <span>Strong influence</span>
           </div>
           <p class="fine">Grad-CAM shows where the model looked. It is not a tumour segmentation.</p>
@@ -142,7 +144,7 @@
         </article>
 
         <article class="card quality-card">
-          <details id="quality-details">
+          <details id="quality-details" class="fold">
             <summary>
               <h2>Image quality</h2>
               <span id="quality-summary" class="summary-count"></span>

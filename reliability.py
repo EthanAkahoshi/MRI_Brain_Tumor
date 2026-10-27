@@ -76,6 +76,11 @@ def head_mask(tensor):
     return filled > 0
 
 
+def signed(x):
+    # True minus sign for display, like the page does
+    return f"{x:+.2f}".replace('-', '\u2212')
+
+
 def background_heat(cam, tensor):
     # Share of Grad-CAM weight that falls outside the head in the model's input
     head = head_mask(tensor)
@@ -135,7 +140,7 @@ def run(image_bgr, model, layer, t=RELIABILITY_THRESHOLDS):
     low_confidence = abs(p - DECISION_THRESHOLD) < t['low_confidence_margin']
     trace.append({
         'step': 'Initial analysis',
-        'detail': (f"P(tumor) {p:.2f}; {len(warning_keys)} quality warning(s)"
+        'detail': (f"Tumour score {p:.2f}; {len(warning_keys)} quality warning{'' if len(warning_keys) == 1 else 's'}"
                    f"{' (' + ', '.join(sorted(warning_keys)) + ')' if warning_keys else ''}; "
                    f"{heat_outside:.0%} of heatmap weight outside the head"),
     })
@@ -168,7 +173,7 @@ def run(image_bgr, model, layer, t=RELIABILITY_THRESHOLDS):
         }
         trace.append({'step': 'Action', 'detail': f"{name}: {how}; re-ran the model once"})
         trace.append({'step': 'Comparison', 'detail': (
-            f"P(tumor) {p:.2f} -> {p2:.2f} ({p2 - p:+.2f}); "
+            f"Tumour score {p:.2f} → {p2:.2f} ({signed(p2 - p)}); "
             f"label {'changed' if followup['label_changed'] else 'unchanged'}"
             + (f"; heatmap agreement {agreement:.2f}" if agreement is not None else ""))})
 

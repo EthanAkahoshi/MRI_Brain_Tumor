@@ -8,7 +8,7 @@ API's "Tumor" / "No tumor" values are displayed as "Tumour" / "No tumour".
 
 1. **Landing.** Sticky translucent header (logo mark, name, model chips). Short
    intro and the safety notice, then one card with the samples up front: four
-   normal samples ("Try a sample") and, in a separate tinted group, two difficult
+   normal samples ("Try a sample") and, in a separate outlined group, two difficult
    scans ("Try a difficult scan": Low contrast, which runs the follow-up test and
    holds, and Very dark, which ends in "Poor input quality"). A compact one-line
    drop zone (click or drag) sits under them. At 1280x800 the samples are above
@@ -19,11 +19,18 @@ API's "Tumor" / "No tumor" values are displayed as "Tumour" / "No tumour".
    new answers never mix.
 4. **Results**, two columns on desktop:
    - **Right (sticky, stays in view while scrolling):** the verdict card
-     (prediction, status badge, one-line meaning, both class scores as bars,
-     "not calibrated probabilities" note, low-confidence callout, "Analyse
-     another scan") and the Reliability panel (initial vs follow-up score and
-     change when a follow-up ran, reliability warnings, decision trace, the
-     "research-demo state" note).
+     (prediction, status badge, one-line meaning, both class scores as bars
+     with a 50% threshold tick and the winning row emphasised, "not calibrated
+     probabilities" note, "Analyse another scan") and the Reliability panel
+     (initial vs follow-up score and change when a follow-up ran, reliability
+     warnings, decision trace, the "research-demo state" note).
+   - When the status is not "consistent", the verdict carries it: the badge
+     moves above the prediction, the prediction and bars turn muted, and a
+     caveat (low confidence, or "Flagged for human review: <status>") sits
+     under the meaning line, before the bars.
+   - The decision trace folds like Image quality: open from 861 px up, closed
+     on narrower screens. On phones the quality table drops its "Expected"
+     column.
    - **Left:** the Grad-CAM viewer (toggle, strength slider, drag-to-compare
      divider), "What the model sees" (original upload, cropped square, model
      input as three large thumbnails), and Image quality.

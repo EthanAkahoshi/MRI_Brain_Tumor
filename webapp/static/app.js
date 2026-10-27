@@ -122,10 +122,14 @@ function setCompare() {
   divider.style.transform = `translateX(-${hidden}%)`;
 }
 
-function probabilityRow(name, p) {
+function probabilityRow(name, p, win) {
   const row = document.createElement('div');
   row.className = 'prob-row';
+  if (win) row.dataset.win = '';
   const bar = el('div', 'bar');
+  bar.title = 'decision threshold 50%';
+  bar.setAttribute('role', 'img');
+  bar.setAttribute('aria-label', `${percent(p)}, decision threshold 50%`);
   bar.append(el('div', 'bar-fill'));
   row.append(el('dt', '', DISPLAY[name] || name), bar, el('dd', '', percent(p)));
   return row;
@@ -159,9 +163,18 @@ function showResult(data) {
   $('meaning').textContent = MEANING[data.prediction] || '';
 
   const entries = Object.entries(data.probabilities);
-  $('probabilities').replaceChildren(...entries.map(([name, p]) => probabilityRow(name, p)));
+  const top = Math.max(...entries.map(([, p]) => p));
+  $('probabilities').replaceChildren(...entries.map(([name, p]) => probabilityRow(name, p, p === top)));
 
-  $('uncertain').hidden = !data.reliability.low_confidence;
+  // A result that is not "consistent" carries its trust status in the verdict itself
+  const rel = data.reliability;
+  const flagged = rel.status !== 'consistent' || rel.human_review;
+  $('verdict').classList.toggle('flagged', flagged);
+  const uncertain = $('uncertain');
+  uncertain.hidden = !flagged && !rel.low_confidence;
+  uncertain.textContent = rel.low_confidence
+    ? `The score is close to the decision threshold, so the model is unsure about this scan.${flagged ? ' Flagged for human review.' : ''}`
+    : `Flagged for human review: ${rel.status_label}.`;
   showQuality(data.quality);
   showReliability(data);
 
@@ -248,6 +261,9 @@ $('reset').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   fileInput.click();
 });
+
+// Decision trace: open on desktop, folded on phones to keep the verdict column short
+$('trace-details').open = matchMedia('(min-width: 861px)').matches;
 
 // Scroll-edge effect: the header only shows its fade once content is underneath it
 const header = $('site-header');

@@ -40,6 +40,6 @@ def heatmap_image(cam, width, height):
     cam = cv2.resize(cam, (width, height), interpolation=cv2.INTER_CUBIC)
     cam = np.clip(cam, 0, 1)
 
-    colour = cv2.applyColorMap((cam * 255).astype(np.uint8), cv2.COLORMAP_JET)
+    colour = cv2.applyColorMap((cam * 255).astype(np.uint8), cv2.COLORMAP_TURBO)  # perceptually smoother than JET, kinder to colour-blind viewers
     alpha = (np.clip((cam - 0.15) / 0.5, 0, 1) * 255).astype(np.uint8)
     return np.dstack([colour, alpha])                  # BGRA
