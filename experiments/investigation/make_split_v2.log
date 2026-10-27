@@ -1,0 +1,18 @@
+pool md5s with conflicting labels: 0
+pool md5-distinct 7386; removed 4391 within 0.045 of Testing/external (681 byte-identical); by (source,label): {('new', 0): 31, ('new', 1): 2555, ('original', 0): 1297, ('original', 1): 508}
+single-linkage over kept pool: largest group 38 (1.27% of kept pool)
+kept 2995 images in 1398 groups; largest 38; group-size distribution {1: 663, 2: 401, 3: 79, 4: 185, 5: 14, 6: 20, 7: 15, 8: 10, 9: 2, 10: 1, 12: 5, 19: 1, 33: 1, 38: 1}
+train n= 1916  healthy= 262  original/no=143  original/tumor=635  new/no=119  new/tumor=1019
+val   n=  480  healthy=  66  original/no=36  original/tumor=159  new/no=30  new/tumor=255
+test  n=  599  healthy=  82  original/no=44  original/tumor=198  new/no=38  new/tumor=319
+10 closest cross-split pairs:
+  0.0450  datasets/yes/glioma/Tr-gl_477.jpg (test)  <->  datasets/yes/glioma/Tr-gl_503.jpg (train)
+  0.0450  datasets/yes/pituitary/Tr-pi_355.jpg (train)  <->  datasets/yes/pituitary/Tr-pi_929.jpg (val)
+  0.0451  datasets/yes/glioma/Tr-gl_1260.jpg (test)  <->  datasets/yes/glioma/Tr-gl_785.jpg (train)
+  0.0451  datasets/yes/pituitary/Tr-pi_617.jpg (val)  <->  datasets/yes/pituitary/Tr-pi_68.jpg (train)
+  0.0451  datasets/yes/meningioma/Tr-me_1180.jpg (val)  <->  datasets/yes/meningioma/Tr-aug-me_30.jpg (train)
+  0.0452  datasets/yes/meningioma/Tr-me_1095.jpg (val)  <->  datasets/yes/meningioma/Tr-aug-me_30.jpg (train)
+  0.0452  datasets/yes/glioma/Tr-gl_1100.jpg (train)  <->  datasets/yes/glioma/Tr-gl_580.jpg (val)
+  0.0453  datasets/yes/pituitary/Tr-pi_119.jpg (train)  <->  datasets/yes/pituitary/Tr-pi_929.jpg (val)
+  0.0454  datasets/yes/glioma/Tr-gl_605.jpg (train)  <->  datasets/yes/glioma/Tr-gl_1179.jpg (test)
+  0.0454  datasets/yes/glioma/Tr-gl_201.jpg (val)  <->  datasets/yes/glioma/Tr-gl_942.jpg (train)

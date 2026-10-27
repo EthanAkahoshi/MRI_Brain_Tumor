@@ -1,0 +1,35 @@
+split f5b698f7d71c: loaded 2995 images in 0s
+train {(np.str_('original'), np.int64(0)): 143, (np.str_('new'), np.int64(0)): 119, (np.str_('original'), np.int64(1)): 635, (np.str_('new'), np.int64(1)): 1019}
+val {(np.str_('original'), np.int64(0)): 36, (np.str_('new'), np.int64(0)): 30, (np.str_('original'), np.int64(1)): 159, (np.str_('new'), np.int64(1)): 255}
+test {(np.str_('original'), np.int64(0)): 44, (np.str_('new'), np.int64(0)): 38, (np.str_('original'), np.int64(1)): 198, (np.str_('new'), np.int64(1)): 319}
+epoch 1 loss 0.6136 train_acc 0.6701 val_bal 0.7762 sens 0.9010 spec 0.6515 src_bal 0.7635 lr 1.0e-03 15s *
+epoch 2 loss 0.4798 train_acc 0.7787 val_bal 0.7138 sens 0.4275 spec 1.0000 src_bal 0.6848 lr 1.0e-03 17s
+epoch 3 loss 0.4448 train_acc 0.7985 val_bal 0.6594 sens 0.3188 spec 1.0000 src_bal 0.6377 lr 1.0e-03 19s
+epoch 4 loss 0.3423 train_acc 0.8513 val_bal 0.6829 sens 0.3961 spec 0.9697 src_bal 0.6795 lr 5.0e-04 20s
+epoch 5 loss 0.3642 train_acc 0.8382 val_bal 0.8647 sens 0.8961 spec 0.8333 src_bal 0.8500 lr 5.0e-04 19s *
+epoch 6 loss 0.3033 train_acc 0.8674 val_bal 0.8540 sens 0.8140 spec 0.8939 src_bal 0.8425 lr 5.0e-04 18s
+epoch 7 loss 0.3244 train_acc 0.8622 val_bal 0.7125 sens 0.9855 spec 0.4394 src_bal 0.7175 lr 5.0e-04 16s
+epoch 8 loss 0.2939 train_acc 0.8773 val_bal 0.7312 sens 0.9928 spec 0.4697 src_bal 0.7375 lr 2.5e-04 15s
+epoch 9 loss 0.2668 train_acc 0.8904 val_bal 0.8076 sens 0.9638 spec 0.6515 src_bal 0.8147 lr 2.5e-04 14s
+epoch 10 loss 0.2578 train_acc 0.8935 val_bal 0.8624 sens 0.8309 spec 0.8939 src_bal 0.8547 lr 2.5e-04 13s
+epoch 11 loss 0.2267 train_acc 0.9066 val_bal 0.8987 sens 0.9034 spec 0.8939 src_bal 0.8924 lr 2.5e-04 14s *
+epoch 12 loss 0.2121 train_acc 0.9186 val_bal 0.8331 sens 0.9541 spec 0.7121 src_bal 0.8393 lr 2.5e-04 15s
+epoch 13 loss 0.2216 train_acc 0.9066 val_bal 0.8973 sens 0.9614 spec 0.8333 src_bal 0.8967 lr 2.5e-04 14s
+epoch 14 loss 0.2136 train_acc 0.9139 val_bal 0.8355 sens 0.9589 spec 0.7121 src_bal 0.8421 lr 1.3e-04 13s
+epoch 15 loss 0.1958 train_acc 0.9228 val_bal 0.9119 sens 0.9300 spec 0.8939 src_bal 0.9097 lr 1.3e-04 16s *
+epoch 16 loss 0.2092 train_acc 0.9144 val_bal 0.7476 sens 0.9952 spec 0.5000 src_bal 0.7558 lr 1.3e-04 14s
+epoch 17 loss 0.1880 train_acc 0.9290 val_bal 0.9014 sens 0.8937 spec 0.9091 src_bal 0.8955 lr 1.3e-04 15s
+epoch 18 loss 0.1864 train_acc 0.9254 val_bal 0.7400 sens 0.9952 spec 0.4848 src_bal 0.7488 lr 6.3e-05 15s
+epoch 19 loss 0.1763 train_acc 0.9290 val_bal 0.8980 sens 0.9324 spec 0.8636 src_bal 0.8954 lr 6.3e-05 15s
+epoch 20 loss 0.1703 train_acc 0.9348 val_bal 0.8631 sens 0.9686 spec 0.7576 src_bal 0.8686 lr 6.3e-05 14s
+epoch 21 loss 0.1590 train_acc 0.9368 val_bal 0.8798 sens 0.9565 spec 0.8030 src_bal 0.8822 lr 3.1e-05 15s
+epoch 22 loss 0.1696 train_acc 0.9379 val_bal 0.8965 sens 0.9444 spec 0.8485 src_bal 0.8958 lr 3.1e-05 14s
+epoch 23 loss 0.1554 train_acc 0.9395 val_bal 0.8898 sens 0.9614 spec 0.8182 src_bal 0.8923 lr 3.1e-05 15s
+early stop
+best epoch 15, val threshold 0.4484 (chosen on val before test)
+val @thr: acc 0.9375 bal 0.9192 sens 0.9444 spec 0.8939 auc 0.9700 src_bal 0.9186 n=480
+   new: n=285 (tumor 255, healthy 30) sens 0.9686 spec 0.9667 bal 0.9676 auc 0.9922
+   original: n=195 (tumor 159, healthy 36) sens 0.9057 spec 0.8333 bal 0.8695 auc 0.9249
+test @thr: acc 0.9032 bal 0.8977 sens 0.9052 spec 0.8902 auc 0.9651 src_bal 0.8915 n=599
+   new: n=357 (tumor 319, healthy 38) sens 0.9530 spec 0.9211 bal 0.9370 auc 0.9861
+   original: n=242 (tumor 198, healthy 44) sens 0.8283 spec 0.8636 bal 0.8460 auc 0.9294

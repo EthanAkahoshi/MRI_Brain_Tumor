@@ -1,0 +1,5 @@
+t=0.015: pool distinct 7386, md5-hit 681, direct-near-held 699, removed if whole group touches held 2264 -> remaining 5122 in 3284 groups, largest 8, groups>=20: 0
+t=0.02: pool distinct 7386, md5-hit 681, direct-near-held 752, removed if whole group touches held 2437 -> remaining 4949 in 3077 groups, largest 8, groups>=20: 0
+t=0.025: pool distinct 7386, md5-hit 681, direct-near-held 911, removed if whole group touches held 2719 -> remaining 4667 in 2792 groups, largest 11, groups>=20: 0
+t=0.03: pool distinct 7386, md5-hit 681, direct-near-held 1200, removed if whole group touches held 3209 -> remaining 4177 in 2400 groups, largest 9, groups>=20: 0
+t=0.035: pool distinct 7386, md5-hit 681, direct-near-held 1604, removed if whole group touches held 3835 -> remaining 3551 in 1908 groups, largest 12, groups>=20: 0

@@ -11,3 +11,10 @@ BrainTumorCNN.pt
 
 # Session notes (local only)
 HANDOFF.md
+
+# Experiment checkpoints (only BrainTumorFinal.pt is kept) and large intermediates
+models/*.pt
+experiments/engineer/cache/
+experiments/investigation/thumbs.npz
+experiments/investigation/nn.npz
+experiments/investigation/image_stats.csv

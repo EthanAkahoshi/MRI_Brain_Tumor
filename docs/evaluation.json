@@ -1,0 +1,114 @@
+{
+ "leak_free_test": {
+  "n": 599,
+  "n_tumor": 517,
+  "n_healthy": 82,
+  "accuracy": 0.9365609348914858,
+  "balanced_accuracy": 0.9375973015049299,
+  "precision": 0.9897750511247444,
+  "recall_sensitivity": 0.9361702127659575,
+  "specificity": 0.9390243902439024,
+  "f1": 0.9622266401590457,
+  "roc_auc": 0.9677784592159268,
+  "confusion_matrix": {
+   "tn": 77,
+   "fp": 5,
+   "fn": 33,
+   "tp": 484
+  }
+ },
+ "testing_benchmark": {
+  "n": 1600,
+  "n_tumor": 1200,
+  "n_healthy": 400,
+  "accuracy": 0.915625,
+  "balanced_accuracy": 0.9020833333333333,
+  "precision": 0.9570815450643777,
+  "recall_sensitivity": 0.9291666666666667,
+  "specificity": 0.875,
+  "f1": 0.9429175475687104,
+  "roc_auc": 0.9635625000000001,
+  "confusion_matrix": {
+   "tn": 350,
+   "fp": 50,
+   "fn": 85,
+   "tp": 1115
+  }
+ },
+ "external_253": {
+  "n": 253,
+  "n_tumor": 155,
+  "n_healthy": 98,
+  "accuracy": 0.8221343873517787,
+  "balanced_accuracy": 0.8473337722185648,
+  "precision": 0.9661016949152542,
+  "recall_sensitivity": 0.7354838709677419,
+  "specificity": 0.9591836734693877,
+  "f1": 0.8351648351648352,
+  "roc_auc": 0.9420671494404215,
+  "confusion_matrix": {
+   "tn": 94,
+   "fp": 4,
+   "fn": 41,
+   "tp": 114
+  }
+ },
+ "leak_free_test_original_source": {
+  "n": 242,
+  "n_tumor": 198,
+  "n_healthy": 44,
+  "accuracy": 0.9132231404958677,
+  "balanced_accuracy": 0.9116161616161615,
+  "precision": 0.9783783783783784,
+  "recall_sensitivity": 0.9141414141414141,
+  "specificity": 0.9090909090909091,
+  "f1": 0.9451697127937336,
+  "roc_auc": 0.9380165289256198,
+  "confusion_matrix": {
+   "tn": 40,
+   "fp": 4,
+   "fn": 17,
+   "tp": 181
+  }
+ },
+ "leak_free_test_new_source": {
+  "n": 357,
+  "n_tumor": 319,
+  "n_healthy": 38,
+  "accuracy": 0.9523809523809523,
+  "balanced_accuracy": 0.9617637353572017,
+  "precision": 0.9967105263157895,
+  "recall_sensitivity": 0.9498432601880877,
+  "specificity": 0.9736842105263158,
+  "f1": 0.9727126805778491,
+  "roc_auc": 0.9924104933179344,
+  "confusion_matrix": {
+   "tn": 37,
+   "fp": 1,
+   "fn": 16,
+   "tp": 303
+  }
+ },
+ "latency_cpu": {
+  "threads": 8,
+  "model_only": {
+   "mean_ms": 1.95,
+   "p95_ms": 2.12
+  },
+  "preprocess_plus_model": {
+   "mean_ms": 2.58,
+   "p95_ms": 3.24
+  },
+  "full_pipeline_quality_gradcam_reliability": {
+   "mean_ms": 15.93,
+   "p95_ms": 27.99
+  }
+ },
+ "memory": {
+  "weights_file_mb": 1.52,
+  "parameters": 393618,
+  "process_rss_mb_after_load": 274.2,
+  "model_load_rss_increase_mb": 5.3,
+  "process_peak_rss_mb": 396.2
+ }
+}

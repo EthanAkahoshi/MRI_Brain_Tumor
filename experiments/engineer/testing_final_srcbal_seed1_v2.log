@@ -1,0 +1,89 @@
+{
+ "threshold": 0.5833315253257751,
+ "testing": {
+  "n": 1600,
+  "n_tumor": 1200,
+  "n_healthy": 400,
+  "accuracy": 0.891875,
+  "sensitivity": 0.8816666666666667,
+  "specificity": 0.9225,
+  "balanced_accuracy": 0.9020833333333333,
+  "roc_auc": 0.9547270833333332,
+  "tp": 1058,
+  "fn": 142,
+  "tn": 369,
+  "fp": 31,
+  "per_source": {
+   "glioma": {
+    "n": 400,
+    "n_tumor": 400,
+    "n_healthy": 0,
+    "accuracy": 0.8575,
+    "sensitivity": 0.8575,
+    "specificity": null,
+    "balanced_accuracy": null,
+    "roc_auc": null,
+    "tp": 343,
+    "fn": 57,
+    "tn": 0,
+    "fp": 0
+   },
+   "meningioma": {
+    "n": 400,
+    "n_tumor": 400,
+    "n_healthy": 0,
+    "accuracy": 0.805,
+    "sensitivity": 0.805,
+    "specificity": null,
+    "balanced_accuracy": null,
+    "roc_auc": null,
+    "tp": 322,
+    "fn": 78,
+    "tn": 0,
+    "fp": 0
+   },
+   "notumor": {
+    "n": 400,
+    "n_tumor": 0,
+    "n_healthy": 400,
+    "accuracy": 0.9225,
+    "sensitivity": null,
+    "specificity": 0.9225,
+    "balanced_accuracy": null,
+    "roc_auc": null,
+    "tp": 0,
+    "fn": 0,
+    "tn": 369,
+    "fp": 31
+   },
+   "pituitary": {
+    "n": 400,
+    "n_tumor": 400,
+    "n_healthy": 0,
+    "accuracy": 0.9825,
+    "sensitivity": 0.9825,
+    "specificity": null,
+    "balanced_accuracy": null,
+    "roc_auc": null,
+    "tp": 393,
+    "fn": 7,
+    "tn": 0,
+    "fp": 0
+   }
+  }
+ },
+ "testing_at_0.5": {
+  "n": 1600,
+  "n_tumor": 1200,
+  "n_healthy": 400,
+  "accuracy": 0.9025,
+  "sensitivity": 0.9016666666666666,
+  "specificity": 0.905,
+  "balanced_accuracy": 0.9033333333333333,
+  "roc_auc": 0.9547270833333332,
+  "tp": 1082,
+  "fn": 118,
+  "tn": 362,
+  "fp": 38
+ }
+}

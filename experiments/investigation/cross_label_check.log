@@ -1,0 +1,4 @@
+md5s with conflicting labels across all sets: 0
+external md5 also in Testing: 0
+near-dup (non-identical) pairs by set pair: {('pool', 'pool'): 16031, ('pool', 'testing'): 5025, ('external', 'pool'): 1642, ('external', 'testing'): 192, ('testing', 'testing'): 455, ('external', 'external'): 30}
+  of which conflicting labels: {}

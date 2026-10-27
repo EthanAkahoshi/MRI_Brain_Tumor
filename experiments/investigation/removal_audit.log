@@ -1,0 +1,8 @@
+(a) exact duplicates within pool (later copies dropped): {('new', 0): 1182, ('new', 1): 52, ('original', 0): 66, ('original', 1): 1} total 1301
+b md5=Testing                                 {'original/no': 391, 'original/tumor': 68}
+b near Testing                                {'new/no': 18, 'new/tumor': 748, 'original/no': 624, 'original/tumor': 21}
+c md5=external                                {'original/no': 82, 'original/tumor': 140}
+c near external                               {'new/no': 7, 'new/tumor': 10, 'original/no': 67, 'original/tumor': 205}
+d same group as a held-out image (transitive) {'new/tumor': 46, 'original/no': 6, 'original/tumor': 4}
+total removed: 2437
+removed healthy (direct near-dup) distance histogram: [584, 75, 34, 23] bins [0,.005,.01,.015,.02]

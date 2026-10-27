@@ -1,5 +1,9 @@
 const MAX_BYTES = 10 * 1024 * 1024;
-const UNSURE_BELOW = 0.75;
+const VIEWER_HEIGHT = 420;
+const MEANING = {
+  Tumor: 'The model sees a tumour pattern in this scan. This is not a diagnosis; a radiologist has to review it.',
+  'No tumor': 'The model found no tumour pattern. It does miss some tumours, so this does not rule one out.',
+};
 
 const $ = (id) => document.getElementById(id);
 const dropzone = $('dropzone');
@@ -7,10 +11,92 @@ const fileInput = $('file-input');
 const errorBox = $('error');
 const loading = $('loading');
 const results = $('results');
+const viewer = $('viewer');
 const heatmap = $('heatmap');
+const divider = $('divider');
+const compare = $('compare');
 const opacity = $('opacity');
 
 const percent = (value) => `${(value * 100).toFixed(1)}%`;
+const signed = (value) => `${value >= 0 ? '+' : '−'}${Math.abs(value * 100).toFixed(1)} pts`;
+// Overwritten by /api/model; defaults match the server so the page works if that call fails
+let limits = { max_background_heat: 0.55, max_score_change: 0.2, min_heatmap_agreement: 0.35 };
+
+const STATUS_TONE = { consistent: 'ok', sensitive: 'warn', poor_quality: 'warn', review: 'review' };
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function setBadge(node, reliability) {
+  node.textContent = reliability.status_label;
+  node.dataset.tone = STATUS_TONE[reliability.status] || 'warn';
+}
+
+function showQuality(quality) {
+  const warned = quality.checks.filter((c) => c.status !== 'ok').length;
+  $('quality-summary').textContent = warned
+    ? `${warned} of ${quality.checks.length} checks need attention`
+    : `All ${quality.checks.length} checks passed`;
+  $('quality-summary').dataset.tone = warned ? 'warn' : 'ok';
+  $('quality-rows').replaceChildren(...quality.checks.map((check) => {
+    const row = el('tr');
+    row.dataset.status = check.status;
+    const name = el('th', '', check.label);
+    name.scope = 'row';
+    if (check.message) name.append(el('span', 'check-message', check.message));
+    const state = el('td', 'state');
+    state.append(el('span', 'pill', check.status === 'ok' ? 'OK' : 'Warning'));
+    row.append(name, el('td', 'num', check.value), el('td', 'num muted', check.expected), state);
+    return row;
+  }));
+}
+
+function reliabilityWarnings(rel) {
+  const list = [];
+  const f = rel.followup;
+  if (rel.low_confidence) list.push('The score is close to the decision threshold (low confidence).');
+  if (rel.background_heat > limits.max_background_heat) {
+    list.push(`${Math.round(rel.background_heat * 100)}% of the heatmap weight is outside the head, so the model may be using the wrong cues.`);
+  }
+  if (f && f.label_changed) list.push('The follow-up test changed the predicted label.');
+  if (f && Math.abs(f.score_change) > limits.max_score_change) list.push('The tumour score moved a lot under a small, controlled change to the image.');
+  if (f && f.predicted_tumor && f.heatmap_agreement != null && f.heatmap_agreement < limits.min_heatmap_agreement) list.push('The heatmap moved to a different region in the follow-up test.');
+  if (rel.status === 'poor_quality') list.push('Image quality is too low for the result to mean much.');
+  if (rel.human_review) list.push('Flagged for human review in this demo.');
+  return list;
+}
+
+function showReliability(data) {
+  const rel = data.reliability;
+  setBadge($('status-badge'), rel);
+  setBadge($('reliability-badge'), rel);
+
+  const f = rel.followup;
+  $('followup').hidden = !f;
+  if (f) {
+    $('followup-action').textContent = `Follow-up test: ${f.action}`;
+    $('score-initial').textContent = percent(data.probabilities.Tumor);
+    $('score-followup').textContent = percent(f.tumor_probability);
+    $('score-change').textContent = signed(f.score_change);
+    $('score-change').dataset.tone = Math.abs(f.score_change) > limits.max_score_change ? 'warn' : 'ok';
+    $('followup-tool').textContent = `${f.tool}. Tumour score shown; label ${f.label_changed ? 'changed' : 'unchanged'}; ${f.heatmap_agreement != null ? `heatmap agreement ${f.heatmap_agreement.toFixed(2)}` : 'heatmaps not compared (this test changes the crop)'}.`;
+  }
+
+  // Quality messages already sit in the quality table; point to them instead of repeating
+  const n = data.warnings.length;
+  const warnings = [...(n ? [`${n} image quality warning${n > 1 ? 's' : ''}, listed under Image quality.`] : []), ...reliabilityWarnings(rel)];
+  $('reliability-warnings').replaceChildren(...warnings.map((text) => el('li', '', text)));
+
+  $('trace').replaceChildren(...rel.trace.map((item) => {
+    const li = el('li');
+    li.append(el('span', 'trace-step', item.step), el('span', 'trace-detail', item.detail));
+    return li;
+  }));
+}
 
 function showError(message) {
   errorBox.textContent = message;
@@ -22,38 +108,63 @@ function setOpacity() {
   heatmap.style.opacity = visible ? opacity.value / 100 : 0;
   $('opacity-value').textContent = `${opacity.value}%`;
   opacity.disabled = !visible;
+  viewer.classList.toggle('no-heatmap', !visible);
+}
+
+function setCompare() {
+  // Heatmap shows left of the divider; set on the elements directly, no inherited variables
+  const hidden = 100 - compare.value;
+  heatmap.style.clipPath = `inset(0 ${hidden}% 0 0)`;
+  divider.style.transform = `translateX(-${hidden}%)`;
+}
+
+function probabilityRow(name, p) {
+  const row = document.createElement('div');
+  row.className = 'prob-row';
+  const bar = el('div', 'bar');
+  bar.append(el('div', 'bar-fill'));
+  row.append(el('dt', '', name), bar, el('dd', '', percent(p)));
+  return row;
+}
+
+function sizeViewer() {
+  // Scale the scan to VIEWER_HEIGHT tall (or the card's width, if narrower), keeping its shape
+  const scan = $('scan');
+  const ratio = scan.naturalWidth / scan.naturalHeight || 1;
+  viewer.style.aspectRatio = `${ratio}`;
+  viewer.style.width = `min(100%, ${Math.round(VIEWER_HEIGHT * ratio)}px)`;
 }
 
 function showResult(data) {
+  $('scan').onload = sizeViewer;
   $('scan').src = data.image;
   heatmap.src = data.heatmap;
   $('model-view').src = data.model_view;
+  $('original').src = data.original;
+  $('cropped').src = data.image;
 
   const prediction = $('prediction');
   prediction.textContent = data.prediction;
   prediction.className = `prediction ${data.prediction === 'Tumor' ? 'tumor' : 'clear'}`;
+  $('meaning').textContent = MEANING[data.prediction] || '';
 
-  $('confidence-bar').style.width = percent(data.confidence);
-  $('confidence').textContent = `${percent(data.confidence)} confidence`;
+  const entries = Object.entries(data.probabilities);
+  $('probabilities').replaceChildren(...entries.map(([name, p]) => probabilityRow(name, p)));
 
-  $('probabilities').replaceChildren(...Object.entries(data.probabilities).flatMap(([name, p]) => {
-    const dt = document.createElement('dt');
-    const dd = document.createElement('dd');
-    dt.textContent = name;
-    dd.textContent = percent(p);
-    return [dt, dd];
-  }));
+  $('uncertain').hidden = !data.reliability.low_confidence;
+  showQuality(data.quality);
+  showReliability(data);
 
-  $('uncertain').hidden = data.confidence >= UNSURE_BELOW;
-
-  $('warnings').replaceChildren(...data.warnings.map((text) => {
-    const li = document.createElement('li');
-    li.textContent = text;
-    return li;
-  }));
-
+  compare.value = 100;
+  setCompare();
   setOpacity();
   results.hidden = false;
+
+  // Fill the bars on the next frame so they animate from empty
+  const fills = results.querySelectorAll('.bar-fill');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    fills.forEach((fill, i) => { fill.style.transform = `scaleX(${entries[i][1]})`; });
+  }));
   results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -107,6 +218,18 @@ dropzone.addEventListener('drop', (event) => {
   if (file) analyse(file);
 });
 
+document.querySelectorAll('.sample').forEach((button) => button.addEventListener('click', async () => {
+  try {
+    const response = await fetch(button.dataset.src);
+    if (!response.ok) throw new Error();
+    const blob = await response.blob();
+    analyse(new File([blob], button.dataset.src.split('/').pop(), { type: blob.type || 'image/jpeg' }));
+  } catch {
+    showError('Could not load that sample.');
+  }
+}));
+
+compare.addEventListener('input', setCompare);
 opacity.addEventListener('input', setOpacity);
 $('heatmap-toggle').addEventListener('change', setOpacity);
 
@@ -116,7 +239,21 @@ $('reset').addEventListener('click', () => {
   fileInput.click();
 });
 
+// Scroll-edge effect: the header only shows its fade once content is underneath it
+const header = $('site-header');
+const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 4);
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
 fetch('/api/model')
   .then((response) => response.json())
-  .then((info) => { $('param-count').textContent = info.parameters.toLocaleString(); })
+  .then((info) => {
+    limits = { ...limits, ...info.reliability_thresholds };
+    const size = `${info.input_size}×${info.input_size}`;
+    $('param-count').textContent = info.parameters.toLocaleString();
+    document.querySelectorAll('.input-size').forEach((el) => { el.textContent = size; });
+    $('model-chips').replaceChildren(...[
+      `${info.parameters.toLocaleString()} parameters`, `${size} input`, 'Trained from scratch', 'PyTorch',
+    ].map((text) => el('li', '', text)));
+  })
   .catch(() => {});

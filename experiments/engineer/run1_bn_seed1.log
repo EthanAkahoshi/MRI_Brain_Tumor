@@ -1,0 +1,18 @@
+split 859e453fdc33: loaded 4949 images in 0s
+train {(np.str_('original'), np.int64(0)): 224, (np.str_('new'), np.int64(0)): 123, (np.str_('original'), np.int64(1)): 680, (np.str_('new'), np.int64(1)): 2140}
+val {(np.str_('original'), np.int64(0)): 56, (np.str_('new'), np.int64(0)): 31, (np.str_('original'), np.int64(1)): 170, (np.str_('new'), np.int64(1)): 535}
+test {(np.str_('original'), np.int64(0)): 70, (np.str_('new'), np.int64(0)): 39, (np.str_('original'), np.int64(1)): 212, (np.str_('new'), np.int64(1)): 669}
+epoch 1 loss 0.5889 train_acc 0.7493 val_bal 0.7721 sens 0.6936 spec 0.8506 src_bal 0.6515 lr 1.0e-03 46s *
+epoch 2 loss 0.5095 train_acc 0.7537 val_bal 0.7770 sens 0.8298 spec 0.7241 src_bal 0.6628 lr 1.0e-03 52s *
+epoch 3 loss 0.4257 train_acc 0.8064 val_bal 0.8463 sens 0.7730 spec 0.9195 src_bal 0.7279 lr 1.0e-03 51s *
+epoch 4 loss 0.4114 train_acc 0.8011 val_bal 0.7142 sens 0.4284 spec 1.0000 src_bal 0.6421 lr 1.0e-03 47s
+epoch 5 loss 0.3751 train_acc 0.8184 val_bal 0.6667 sens 0.9887 spec 0.3448 src_bal 0.6530 lr 1.0e-03 48s
+epoch 6 loss 0.3527 train_acc 0.8450 val_bal 0.8318 sens 0.7901 spec 0.8736 src_bal 0.7241 lr 5.0e-04 46s
+epoch 7 loss 0.3422 train_acc 0.8304 val_bal 0.8869 sens 0.9348 spec 0.8391 src_bal 0.8491 lr 5.0e-04 47s *
+epoch 8 loss 0.3030 train_acc 0.8551 val_bal 0.8835 sens 0.8014 spec 0.9655 src_bal 0.8389 lr 5.0e-04 47s
+epoch 9 loss 0.2927 train_acc 0.8630 val_bal 0.8262 sens 0.6525 spec 1.0000 src_bal 0.7380 lr 5.0e-04 46s
+epoch 10 loss 0.2933 train_acc 0.8636 val_bal 0.8614 sens 0.7688 spec 0.9540 src_bal 0.7391 lr 2.5e-04 42s
+epoch 11 loss 0.2621 train_acc 0.8756 val_bal 0.8688 sens 0.9560 spec 0.7816 src_bal 0.8550 lr 2.5e-04 41s
+epoch 12 loss 0.2584 train_acc 0.8825 val_bal 0.8854 sens 0.9433 spec 0.8276 src_bal 0.8524 lr 2.5e-04 41s
+epoch 13 loss 0.2621 train_acc 0.8838 val_bal 0.9097 sens 0.8539 spec 0.9655 src_bal 0.8516 lr 2.5e-04 40s *
+epoch 14 loss 0.2517 train_acc 0.8911 val_bal 0.9005 sens 0.9504 spec 0.8506 src_bal 0.8795 lr 2.5e-04 40s

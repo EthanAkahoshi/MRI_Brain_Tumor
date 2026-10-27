@@ -1,35 +1,43 @@
 import base64
+import os
 import sys
+import threading
 from pathlib import Path
 
-import cv2
-import numpy as np
-import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
+# Before cv2 is imported anywhere: refuse to decode images over 50 megapixels, so a
+# small but huge-dimension PNG ("decompression bomb") can't exhaust memory
+os.environ.setdefault('OPENCV_IO_MAX_IMAGE_PIXELS', str(50_000_000))
+
+import cv2  # noqa: E402
+import numpy as np  # noqa: E402
+from fastapi import FastAPI, File, HTTPException, UploadFile  # noqa: E402
+from fastapi.responses import FileResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from gradcam import grad_cam, heatmap_image  # noqa: E402
-from model import BrainTumorCNN, CLASS_NAMES, INPUT_SIZE, crop_to_brain, preprocess  # noqa: E402
+import reliability  # noqa: E402
+from gradcam import heatmap_image  # noqa: E402
+from model import CLASS_NAMES, INPUT_SIZE, crop_to_brain, load_model, pad_to_square  # noqa: E402
+from quality_analysis import QUALITY_THRESHOLDS  # noqa: E402
 
-MODEL_PATH = ROOT / 'BrainTumorBest.pt'
 STATIC_DIR = Path(__file__).resolve().parent / 'static'
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_DISPLAY_SIZE = 512
 ALLOWED_TYPES = {'image/jpeg', 'image/png'}
 
-model = BrainTumorCNN()
-model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
-model.eval()
+model = load_model()
 
-# ReLU after the last convolution: the most detailed layer that still "knows"
-# about tumours, so it is the usual choice for Grad-CAM
-GRAD_CAM_LAYER = model.features[7]
+# ReLU of the 4th conv block (16x16 map). The 5th block's map is only 4x4 at
+# 128 px input, too coarse to show anything useful.
+GRAD_CAM_LAYER = model.features[3][2]
 
-app = FastAPI(title="Brain MRI Tumor Classifier")
+# Grad-CAM registers hooks on the one shared model; two requests at once would mix
+# their activations, so analyses run one at a time (in FastAPI's worker threads)
+ANALYSIS_LOCK = threading.Lock()
+
+app = FastAPI(title="MRI VisionGuard")
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 
 
@@ -38,11 +46,10 @@ def encode_png(image):
     return 'data:image/png;base64,' + base64.b64encode(buffer).decode()
 
 
-def looks_like_grayscale(image_bgr):
-    # MRI scans are grayscale; strongly coloured images are probably not MRIs
-    channels = image_bgr.astype(np.int16)
-    spread = np.abs(channels - channels.mean(axis=2, keepdims=True)).mean()
-    return spread < 10
+def fit(image, size=MAX_DISPLAY_SIZE):
+    h, w = image.shape[:2]
+    scale = min(1.0, size / max(h, w))
+    return cv2.resize(image, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA)
 
 
 @app.get('/')
@@ -61,49 +68,48 @@ def model_info():
         'classes': CLASS_NAMES,
         'input_size': INPUT_SIZE,
         'parameters': sum(p.numel() for p in model.parameters()),
+        'quality_thresholds': QUALITY_THRESHOLDS,
+        'reliability_thresholds': reliability.RELIABILITY_THRESHOLDS,
     }
 
 
 @app.post('/api/predict')
-async def predict(file: UploadFile = File(...)):
+def predict(file: UploadFile = File(...)):
+    # Plain def: FastAPI runs it in a worker thread, so CPU work doesn't block the server
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(415, "Please upload a JPEG or PNG image.")
 
-    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "Image is larger than 10 MB.")
 
-    image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    try:
+        image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    except cv2.error:
+        # OpenCV 5 raises (rather than returning None) for images over the pixel limit
+        raise HTTPException(413, "Image dimensions are too large.")
     if image is None:
         raise HTTPException(400, "Could not read that file as an image.")
 
-    tensor = preprocess(image)
-    with torch.no_grad():
-        probabilities = torch.softmax(model(tensor), dim=1)[0]
-    predicted = int(probabilities.argmax())
+    with ANALYSIS_LOCK:
+        result = reliability.run(image, model, GRAD_CAM_LAYER)
+    p = result['tumor_probability']
+    probabilities = {'No tumor': 1 - p, 'Tumor': p}
+    prediction = CLASS_NAMES[result['label']]
 
-    # The model only sees the cropped brain, so show that crop and stretch the
-    # heatmap over it, keeping the crop's aspect ratio
-    cropped = crop_to_brain(image)
-    height, width = cropped.shape[:2]
-    scale = min(1.0, MAX_DISPLAY_SIZE / max(height, width))
-    display_w, display_h = round(width * scale), round(height * scale)
-    display = cv2.resize(cropped, (display_w, display_h), interpolation=cv2.INTER_AREA)
-
-    cam = grad_cam(model, tensor, predicted, GRAD_CAM_LAYER)
-    model_view = cv2.resize(cropped, (INPUT_SIZE, INPUT_SIZE))
+    display = fit(pad_to_square(crop_to_brain(image)))
+    model_view = (result['tensor'][0, 0].numpy() * 255).round().astype(np.uint8)
+    quality = result['quality']
 
     return {
-        'prediction': CLASS_NAMES[predicted],
-        'confidence': probabilities[predicted].item(),
-        'probabilities': {
-            name: probabilities[i].item() for i, name in enumerate(CLASS_NAMES)
-        },
+        'prediction': prediction,
+        'confidence': probabilities[prediction],
+        'probabilities': probabilities,
+        'original': encode_png(fit(image)),
         'image': encode_png(display),
-        'heatmap': encode_png(heatmap_image(cam, display_w, display_h)),
+        'heatmap': encode_png(heatmap_image(result['cam'], display.shape[1], display.shape[0])),
         'model_view': encode_png(model_view),
-        'warnings': [] if looks_like_grayscale(image) else [
-            "This image is in colour. MRI scans are grayscale, so this may not be an "
-            "MRI, and the model will still give an answer that means nothing."
-        ],
+        'quality': {'checks': quality['checks'], 'metrics': quality['metrics']},
+        'reliability': result['reliability'],
+        'warnings': quality['warnings'],
     }

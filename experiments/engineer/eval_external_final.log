@@ -1,0 +1,4 @@
+seed0 thr 0.4484 all 253 files: n 253, balanced_accuracy 0.7081, sensitivity 0.4774, specificity 0.9388, roc_auc 0.8639, tp 74, fn 81, tn 92, fp 6
+seed0 thr 0.4484 228 distinct: n 228, balanced_accuracy 0.6925, sensitivity 0.4539, specificity 0.9310, roc_auc 0.8512, tp 64, fn 77, tn 81, fp 6
+seed1 thr 0.5833 all 253 files: n 253, balanced_accuracy 0.7215, sensitivity 0.4839, specificity 0.9592, roc_auc 0.8889, tp 75, fn 80, tn 94, fp 4
+seed1 thr 0.5833 228 distinct: n 228, balanced_accuracy 0.7040, sensitivity 0.4539, specificity 0.9540, roc_auc 0.8754, tp 64, fn 77, tn 83, fp 4

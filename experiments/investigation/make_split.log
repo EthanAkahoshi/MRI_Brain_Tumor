@@ -1,0 +1,6 @@
+pool md5s with conflicting labels: 0
+pool md5-distinct 7386; removed 2437 near/exact copies of Testing/external (681 byte-identical); by (source,label): {('new', 0): 25, ('new', 1): 804, ('original', 0): 1170, ('original', 1): 438}
+kept 4949 images in 3077 groups (largest 8)
+train n= 3167  original/no=224  original/tumor=680  new/no=123  new/tumor=2140
+val   n=  792  original/no=56  original/tumor=170  new/no=31  new/tumor=535
+test  n=  990  original/no=70  original/tumor=212  new/no=39  new/tumor=669

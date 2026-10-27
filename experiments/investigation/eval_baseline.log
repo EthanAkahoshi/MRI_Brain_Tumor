@@ -1,0 +1,19 @@
+pool kept 6927 (original 2561, new 4366); original-only pool 2561; Testing unique 1584 of 1600; external unique 228 of 253
+
+=== model BrainTumorBest.pt ===
+combined random test split  n= 1386 acc 0.9113  bal 0.9252  sens 0.9023 (1007/1116)  spec 0.9481 (256/270)  AUC 0.9803
+   source=original             n=  515 acc 0.8039  bal 0.8244  sens 0.6712 (196/292)  spec 0.9776 (218/223)  AUC 0.9620
+   source=new                  n=  871 acc 0.9747  bal 0.8964  sens 0.9842 (811/824)  spec 0.8085 (38/47)  AUC 0.9840
+original-only random test    n=  513 acc 0.8285  bal 0.8448  sens 0.7073 (203/287)  spec 0.9823 (222/226)  AUC 0.9678
+testing                      n= 1584 acc 0.9482  bal 0.9596  sens 0.9367 (1109/1184)  spec 0.9825 (393/400)  AUC 0.9939
+external                     n=  228 acc 0.7500  bal 0.7935  sens 0.6099 (86/141)  spec 0.9770 (85/87)  AUC 0.9392
+
+=== model BrainTumorBest_original-data.pt ===
+combined random test split  n= 1386 acc 0.6919  bal 0.7483  sens 0.6559 (732/1116)  spec 0.8407 (227/270)  AUC 0.8530
+   source=original             n=  515 acc 0.9282  bal 0.9250  sens 0.9486 (277/292)  spec 0.9013 (201/223)  AUC 0.9829
+   source=new                  n=  871 acc 0.5522  bal 0.5527  sens 0.5522 (455/824)  spec 0.5532 (26/47)  AUC 0.5816
+original-only random test    n=  513 acc 0.9298  bal 0.9265  sens 0.9547 (274/287)  spec 0.8982 (203/226)  AUC 0.9854
+testing                      n= 1584 acc 0.6641  bal 0.7637  sens 0.5625 (666/1184)  spec 0.9650 (386/400)  AUC 0.8959
+external                     n=  228 acc 0.9123  bal 0.9159  sens 0.9007 (127/141)  spec 0.9310 (81/87)  AUC 0.9717
+
+combined-split test images that are in the original-only train+val split: 302 of 1386

@@ -9,7 +9,7 @@ from torchvision.transforms import v2
 
 from sklearn.model_selection import train_test_split
 
-from model import BrainTumorCNN, preprocess
+from model import BrainTumorCNN, preprocess_legacy as preprocess  # legacy trainer for BrainTumorCNN
 
 image_directory = 'datasets/'
 # Held-out benchmark: never trained on. 'notumor' is class 0, every other folder is a tumour type

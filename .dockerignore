@@ -3,6 +3,12 @@ datasets/
 __pycache__/
 *.keras
 BrainTumorCNN.pt
+BrainTumorBest*.pt
+BrainTumor10Epochs.pt
+models/
+experiments/
+docs/
+tests/
 mainTrain.py
 mainTest.py
 Liver.py

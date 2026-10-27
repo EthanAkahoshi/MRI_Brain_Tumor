@@ -1,0 +1,12 @@
+split f5b698f7d71c: loaded 2995 images in 11s
+train {(np.str_('original'), np.int64(0)): 143, (np.str_('new'), np.int64(0)): 119, (np.str_('original'), np.int64(1)): 635, (np.str_('new'), np.int64(1)): 1019}
+val {(np.str_('original'), np.int64(0)): 36, (np.str_('new'), np.int64(0)): 30, (np.str_('original'), np.int64(1)): 159, (np.str_('new'), np.int64(1)): 255}
+test {(np.str_('original'), np.int64(0)): 44, (np.str_('new'), np.int64(0)): 38, (np.str_('original'), np.int64(1)): 198, (np.str_('new'), np.int64(1)): 319}
+epoch 1 loss 0.6286 train_acc 0.6461 val_bal 0.6433 sens 0.3623 spec 0.9242 src_bal 0.6419 lr 1.0e-03 47s *
+epoch 2 loss 0.5074 train_acc 0.7625 val_bal 0.5229 sens 0.0459 spec 1.0000 src_bal 0.5240 lr 1.0e-03 46s
+epoch 3 loss 0.4988 train_acc 0.7688 val_bal 0.8007 sens 0.6014 spec 1.0000 src_bal 0.7619 lr 1.0e-03 46s *
+epoch 4 loss 0.3879 train_acc 0.8246 val_bal 0.7930 sens 0.6618 spec 0.9242 src_bal 0.7813 lr 1.0e-03 45s
+epoch 5 loss 0.4196 train_acc 0.8158 val_bal 0.8693 sens 0.8599 spec 0.8788 src_bal 0.8564 lr 1.0e-03 47s *
+epoch 6 loss 0.3726 train_acc 0.8272 val_bal 0.8511 sens 0.7174 spec 0.9848 src_bal 0.8118 lr 1.0e-03 47s
+epoch 7 loss 0.3912 train_acc 0.8267 val_bal 0.6618 sens 0.9903 spec 0.3333 src_bal 0.6693 lr 1.0e-03 43s
+epoch 8 loss 0.3487 train_acc 0.8523 val_bal 0.8196 sens 0.8816 spec 0.7576 src_bal 0.8092 lr 5.0e-04 45s

@@ -2,11 +2,9 @@ import sys
 from pathlib import Path
 
 import cv2
-import torch
 
-from model import BrainTumorCNN, CLASS_NAMES, preprocess
+from model import CLASS_NAMES, DECISION_THRESHOLD, load_model, preprocess, tumor_probability
 
-MODEL_PATH = Path(__file__).resolve().parent / 'BrainTumorBest.pt'
 DEFAULT_IMAGES = Path(r'Z:\GoogleDownloads\Brain\pred')
 IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png')
 
@@ -23,8 +21,9 @@ def collect_images(paths):
     for path in paths:
         path = Path(path)
         if path.is_dir():
+            # Subfolders too (e.g. datasets/yes/glioma)
             images.extend(sorted(
-                p for p in path.iterdir()
+                p for p in path.rglob('*')
                 if p.suffix.lower() in IMAGE_EXTENSIONS
             ))
         else:
@@ -32,23 +31,20 @@ def collect_images(paths):
     return images
 
 
-model = BrainTumorCNN()
-model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
-model.eval()
+model = load_model()
 
 image_paths = collect_images(sys.argv[1:] or [DEFAULT_IMAGES])
 if not image_paths:
     sys.exit("No images found.")
 
-with torch.no_grad():
-    for image_path in image_paths:
-        image = load_image(image_path)
-        if image is None:
-            print("Could not load:", image_path)
-            continue
+for image_path in image_paths:
+    image = load_image(image_path)
+    if image is None:
+        print("Could not load:", image_path)
+        continue
 
-        probabilities = torch.softmax(model(image), dim=1)[0]
-        predicted = int(probabilities.argmax())
+    p = tumor_probability(model, image)
+    predicted = int(p >= DECISION_THRESHOLD)
+    score = p if predicted else 1 - p
 
-        print(f"{image_path.name}: {CLASS_NAMES[predicted]} "
-              f"({probabilities[predicted].item():.1%})")
+    print(f"{image_path.name}: {CLASS_NAMES[predicted]} ({score:.1%})")
