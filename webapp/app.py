@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 from pathlib import Path
+from typing import Literal
 
 # Before cv2 is imported anywhere: refuse to decode images over 50 megapixels, so a
 # small but huge-dimension PNG ("decompression bomb") can't exhaust memory
@@ -13,11 +14,13 @@ import numpy as np  # noqa: E402
 from fastapi import FastAPI, File, HTTPException, UploadFile  # noqa: E402
 from fastapi.responses import FileResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import reliability  # noqa: E402
+from webapp import assistant  # noqa: E402
 from gradcam import heatmap_image  # noqa: E402
 from model import CLASS_NAMES, INPUT_SIZE, crop_to_brain, load_model, pad_to_square  # noqa: E402
 from quality_analysis import QUALITY_THRESHOLDS  # noqa: E402
@@ -124,3 +127,25 @@ def predict(file: UploadFile = File(...)):
         'reliability': result['reliability'],
         'warnings': quality['warnings'],
     }
+
+
+class Turn(BaseModel):
+    role: Literal['user', 'assistant']
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class AskRequest(BaseModel):
+    # The /api/predict response for the scan being discussed (images are ignored)
+    result: dict
+    messages: list[Turn] = Field(min_length=1, max_length=20)
+
+
+@app.post('/api/ask')
+def ask(request: AskRequest):
+    turns = [turn.model_dump() for turn in request.messages]
+    if turns[0]['role'] != 'user' or turns[-1]['role'] != 'user':
+        raise HTTPException(422, "The conversation must start and end with a question.")
+    try:
+        return {'answer': assistant.ask(request.result, turns)}
+    except assistant.AssistantError as error:
+        raise HTTPException(error.status, error.message)

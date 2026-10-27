@@ -203,6 +203,60 @@ function sizeViewer() {
   frame.style.top = `${(-box.y / box.h) * 100}%`;
 }
 
+// Assistant chat: the conversation belongs to the scan currently shown
+const MAX_TURNS = 19; // the server accepts 20 messages, ending with a question
+let assistantResult = null;
+let chat = [];
+
+function addChatMessage(role, text) {
+  const message = el('p', `chat-msg ${role}`, text);
+  $('chat-log').append(message);
+  return message;
+}
+
+function resetChat(data) {
+  // The images are large and the assistant must not see them anyway
+  const { original, image, heatmap: _, cam, model_view, ...numbers } = data;
+  assistantResult = numbers;
+  chat = [];
+  $('chat-log').replaceChildren();
+  $('explain').hidden = false;
+  $('chat-form').hidden = true;
+}
+
+async function askAssistant(question) {
+  const conversation = chat;
+  conversation.push({ role: 'user', content: question });
+  const asked = addChatMessage('user', question);
+  const pending = addChatMessage('assistant pending', 'Thinking…');
+  $('explain').disabled = true;
+  $('chat-input').disabled = true;
+  try {
+    const response = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result: assistantResult, messages: conversation }),
+    });
+    const data = await response.json();
+    if (conversation !== chat) return; // a new scan was analysed meanwhile
+    if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The assistant could not answer.');
+    conversation.push({ role: 'assistant', content: data.answer });
+    pending.className = 'chat-msg assistant';
+    pending.textContent = data.answer;
+    $('explain').hidden = true;
+    $('chat-form').hidden = conversation.length >= MAX_TURNS;
+  } catch (error) {
+    if (conversation !== chat) return;
+    conversation.pop(); // drop the unanswered question so the conversation stays valid
+    asked.remove();
+    pending.className = 'chat-msg error';
+    pending.textContent = error.message || 'Could not reach the server.';
+  } finally {
+    $('explain').disabled = false;
+    $('chat-input').disabled = false;
+  }
+}
+
 function showResult(data) {
   const b = data.content_box;
   box = b && b.w > 0 && b.h > 0 ? b : { x: 0, y: 0, w: 1, h: 1 };
@@ -235,6 +289,7 @@ function showResult(data) {
     : `Flagged for human review: ${rel.status_label}.`;
   showQuality(data.quality);
   showReliability(data);
+  resetChat(data);
 
   compare.value = 100;
   setCompare();
@@ -320,6 +375,14 @@ document.querySelectorAll('.sample').forEach((button) => button.addEventListener
 }));
 
 $('replay').addEventListener('click', () => { if (heat) revealHeatmap(); });
+$('explain').addEventListener('click', () => askAssistant('Explain this result in plain English.'));
+$('chat-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const question = $('chat-input').value.trim();
+  if (!question) return;
+  $('chat-input').value = '';
+  askAssistant(question);
+});
 compare.addEventListener('input', setCompare);
 opacity.addEventListener('input', setOpacity);
 $('heatmap-toggle').addEventListener('change', setOpacity);

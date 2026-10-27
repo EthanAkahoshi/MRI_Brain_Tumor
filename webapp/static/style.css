@@ -642,6 +642,36 @@ html { scroll-behavior: smooth; }
 .trace-detail { display: block; color: var(--muted); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .reliability-card .fine { margin-top: 0; }
 
+/* Assistant chat */
+.assistant-card .muted-text { margin-bottom: 0.75rem; }
+.chat-log { display: grid; gap: 0.5rem; }
+.chat-log:not(:empty) { margin-bottom: 0.75rem; }
+.chat-msg {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.chat-msg.user { justify-self: end; max-width: 85%; color: var(--on-accent); background: var(--accent); }
+.chat-msg.assistant { background: var(--surface-2); }
+.chat-msg.pending { color: var(--muted); }
+.chat-msg.error { color: var(--tumor); background: var(--tumor-soft); }
+.chat-form { display: flex; gap: 0.5rem; }
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--group-edge);
+  border-radius: var(--radius-sm);
+}
+.chat-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
 @media (hover: hover) and (pointer: fine) {
   .dropzone:hover { border-color: var(--accent); background: var(--accent-soft); }
   .sample:hover { border-color: var(--accent); transform: translateY(-2px); }

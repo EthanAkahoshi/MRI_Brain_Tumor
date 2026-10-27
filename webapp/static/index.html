@@ -136,6 +136,18 @@
           </details>
           <p class="fine">These statuses belong to the research demo and carry no clinical meaning.</p>
         </article>
+
+        <article class="card assistant-card" aria-label="Ask about this result">
+          <h2>Ask about this result</h2>
+          <p class="muted-text">Answers come from Claude, an AI model, using only the numbers above. The image is never sent. Answers can be wrong and are not medical advice.</p>
+          <div id="chat-log" class="chat-log" aria-live="polite"></div>
+          <button id="explain" class="button" type="button">Explain this result</button>
+          <form id="chat-form" class="chat-form" hidden>
+            <label for="chat-input" class="sr-only">Your question</label>
+            <input id="chat-input" type="text" maxlength="500" placeholder="Ask a follow-up question" autocomplete="off" required>
+            <button class="button" type="submit">Ask</button>
+          </form>
+        </article>
       </div>
 
       <div class="results-main">

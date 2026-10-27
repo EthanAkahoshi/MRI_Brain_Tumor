@@ -17,6 +17,8 @@ You upload one axial MRI slice (JPEG or PNG). The app then:
 
 The reliability check never changes the prediction. It only reports how stable the prediction is.
 
+Under each result, an optional assistant explains it in plain English and answers follow-up questions about it. It uses Claude through the Anthropic API and receives only the numbers (scores, quality checks, reliability status and decision trace), never the image. It is told to explain the app's output and never to give a diagnosis or medical advice.
+
 ![A result: Grad-CAM heatmap, prediction and decision trace](docs/screenshots/result.png)
 
 The heatmap is revealed strongest-first, so the region that drove the prediction appears before the weaker influence around it:
@@ -85,6 +87,8 @@ python -m venv .venv
 
 Then open http://127.0.0.1:8000 and try one of the sample scans.
 
+To turn on the "Ask about this result" assistant, set an Anthropic API key before starting the server (`set ANTHROPIC_API_KEY=...` on Windows, `export ANTHROPIC_API_KEY=...` elsewhere). Without one, everything else works and the assistant says it isn't set up.
+
 Uploads are limited to JPEG or PNG, 10 MB and 50 megapixels. Images are processed in memory and never written to disk.
 
 A [`Dockerfile`](Dockerfile) is included for packaging, but it has not been built or tested yet.
@@ -96,13 +100,14 @@ A [`Dockerfile`](Dockerfile) is included for packaging, but it has not been buil
 .venv\Scripts\python -m pytest
 ```
 
-The 47 tests cover preprocessing, the quality checks, the reliability rules, the API, the leak-free split and a check that the app, `mainTest.py` and a direct model call give the same answer.
+The 53 tests cover preprocessing, the quality checks, the reliability rules, the API, the assistant (with a stand-in client, so no API key is needed), the leak-free split and a check that the app, `mainTest.py` and a direct model call give the same answer.
 
 ### API
 
 | Method | Path | Returns |
 |---|---|---|
 | `POST` | `/api/predict` | Prediction, scores, heatmap, quality checks, reliability status and decision trace for an uploaded image (`file` form field) |
+| `POST` | `/api/ask` | The assistant's answer, given a result from `/api/predict` and the conversation so far (JSON: `result`, `messages`) |
 | `GET` | `/api/model` | Class names, input size, parameter count and the quality and reliability thresholds |
 | `GET` | `/api/health` | `{"status": "ok"}` |
 
@@ -133,4 +138,4 @@ The training data is not in the repo. It came from two public Kaggle brain MRI c
 
 ## Built with
 
-PyTorch, OpenCV, NumPy, FastAPI and Uvicorn, with a plain HTML, CSS and JavaScript front end (no build step).
+PyTorch, OpenCV, NumPy, FastAPI and Uvicorn, with a plain HTML, CSS and JavaScript front end (no build step). The optional assistant uses the Anthropic Python SDK.
